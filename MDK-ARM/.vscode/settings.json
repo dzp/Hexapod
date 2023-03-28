@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "*.m": "matlab",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "cstdint": "cpp",
+        "array": "cpp",
+        "remote.h": "c",
+        "dma.h": "c",
+        "string": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "cmath": "cpp",
+        "my_math.h": "c"
+    }
+}
