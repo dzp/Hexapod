@@ -2,6 +2,7 @@
 #define GAIT_PRG_H
 
 #include "my_math.h"
+#include "main.h"
 
 #define LEG_LEN1 53.f  // 腿部第一连杆长度（单位mm）
 #define LEG_LEN2 80.f  // 腿部第二连杆长度（单位mm）
@@ -15,9 +16,13 @@
 #define THETA_STAND_2 40.0f / 180.0f * PI // 机械腿站立时最后两个关节的角度
 #define THETA_STAND_3 -110.0f / 180.0f * PI
 
-#define K_CEN 1 // 用于确定圆心模长的系数
+#define K_CEN 100.0f // 用于确定圆心模长的系数
 #define KR_1 1  //%用于计算步伐大小的系数
 #define KR_2 1  //%用于计算步伐大小的系数
+#define MAX_R_PACE 50.0f //最大步伐半径
+
+#define MIN_Z_PACE 15.0f
+
 
 class Velocity
 {
@@ -27,17 +32,23 @@ public:
     float omega; // 角速度
 };
 
-class Gait_prg
-{
-public:
-    Gait_prg(); // 初始化
-    void CEN_and_pace_cal();
-    void gait_proggraming();
-};
-
 typedef struct
 {
     Thetas thetas[N_POINTS];
 } action;
+
+class Gait_prg
+{
+private:
+    uint32_t pace_time; //走一步花费的时间
+public:
+    action actions[6];
+    void Init(); // 初始化
+    void CEN_and_pace_cal(Velocity velocity);
+    void gait_proggraming();
+    uint32_t get_pace_time();
+};
+
+
 
 #endif

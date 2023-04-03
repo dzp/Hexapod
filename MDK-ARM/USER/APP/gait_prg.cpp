@@ -7,23 +7,23 @@
 using namespace std;
 
 // 全局变量
-action actions[6];            // 动作组
-static Position3 Pws[6];             // 机械腿末端站立状态下相对于起始端的位置
-static Position3 P_legs[6];          // 各个机械腿起始端相对于机器人中心的坐标
-static Velocity velocity;            // 机器人速度结构体
-static RC_remote_data_t remote_data; // 遥控器数据
-static Position3 CEN;                // 绕圆心的坐标
-static float R_pace;                 // 步伐大小（单位mm）
-uint32_t tic,toc;
+Position3 Pws[6];    // 机械腿末端站立状态下相对于起始端的位置
+Position3 P_legs[6]; // 各个机械腿起始端相对于机器人中心的坐标
+Position3 CEN;       // 绕圆心的坐标
+float R_pace;        // 步伐大小（单位mm）
+uint32_t tic, toc;
+int test = 1;
+Position3 Point_detect[6][20];
 
-extern uint32_t LegControl_round;   //控制回合
+extern uint32_t LegControl_round; // 控制回合
 
 // 函数
 static Position3 fkine(Thetas thetas);
-static Thetas ikine(Position3 pos);
+static Thetas ikine(Position3 &pos);
 
-Gait_prg::Gait_prg()
+void Gait_prg::Init()
 {
+    test = 100;
     // 计算机械腿相对于起始端的末端坐标
     Pws[0] = fkine(Thetas(PI / 4, THETA_STAND_2, THETA_STAND_3));
     Pws[1] = fkine(Thetas(0, THETA_STAND_2, THETA_STAND_3));
@@ -40,7 +40,6 @@ Gait_prg::Gait_prg()
     P_legs[5] = Position3(-CHASSIS_FRONT_WIDTH / 2, -CHASSIS_LEN / 2, 0);
 }
 
-
 /*
  * 正运动解算
  */
@@ -56,25 +55,25 @@ static Position3 fkine(Thetas thetas)
 /*
  * 逆运动解算
  */
-static Thetas ikine(Position3 pos)
+static Thetas ikine(Position3 &pos)
 {
-    float R = sqrt(pow(pos.x, 2) + pow(pos.y, 2));
-    float Lr = sqrt(pow(pos.z, 2) + pow(pos.y, 2));
-    float alpha_r = atan(-pos.z / (R - LEG_LEN1));
-    float alpha1 = acos((pow(LEG_LEN2, 2) + pow(Lr, 2) - pow(LEG_LEN3, 2)) / (2 * Lr * LEG_LEN2));
-    float alpha2 = acos((pow(Lr,2)+pow(LEG_LEN3,2)-pow(LEG_LEN2,2))/(2*Lr*LEG_LEN3));
-    Thetas thetas(atan2(pos.y, pos.x), alpha1 - alpha_r, -(alpha1 + alpha2));
-    
+    static Position3 pos1;
+    static float R, Lr, alpha_r, alpha1, alpha2;
+    pos1 = pos;
+    R = sqrt(pow(pos1.x, 2) + pow(pos1.y, 2));
+    Lr = sqrt(pow(pos1.z, 2) + pow((R - LEG_LEN1), 2));
+    alpha_r = atan(-pos1.z / (R - LEG_LEN1));
+    alpha1 = acos((pow(LEG_LEN2, 2) + pow(Lr, 2) - pow(LEG_LEN3, 2)) / (2 * Lr * LEG_LEN2));
+    alpha2 = acos((pow(Lr, 2) + pow(LEG_LEN3, 2) - pow(LEG_LEN2, 2)) / (2 * Lr * LEG_LEN3));
+    Thetas thetas(atan2(pos1.y, pos1.x), alpha1 - alpha_r, -(alpha1 + alpha2));
+
     return thetas;
 }
 /*
- * 计算圆心位置和步伐大小
+ * 计算圆心位置和步伐大小已及步伐执行时间
  */
-void Gait_prg::CEN_and_pace_cal()
+void Gait_prg::CEN_and_pace_cal(Velocity velocity)
 {
-    velocity.Vx = remote_data.right_HRZC;
-    velocity.Vy = remote_data.right_VETC;
-    velocity.omega = remote_data.left_HRZC;
     // 数据预处理，避免出现0
     if (velocity.Vx == 0)
         velocity.Vx += 0.001f;
@@ -84,24 +83,36 @@ void Gait_prg::CEN_and_pace_cal()
         velocity.omega += 0.001f;
     // 计算圆心模长
     float module_CEN = K_CEN / velocity.omega * sqrt(pow(velocity.Vx, 2) + pow(velocity.Vy, 2));
-    if (velocity.omega > 0)
-    {
-        if (velocity.Vx * velocity.Vy > 0) // 速度向量在1,3象限
-            CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
-        else // 速度向量在2,4象限
-            CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
-    }
-    else
-    {
-        if (velocity.Vx * velocity.Vy > 0) // 速度向量在1,3象限
-            CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
-        else // 速度向量在2,4象限
-            CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
-    }
+		Velocity velocity_s;  //旋转90度
+		velocity_s.Vx = -velocity.Vy;
+		velocity_s.Vy = velocity.Vx;
+//    if (velocity.omega > 0)
+//    {
+//        if (velocity.Vx * velocity.Vy > 0) // 速度向量在1,3象限
+//            CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+//        else // 速度向量在2,4象限
+//            CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+//    }
+//    else
+//    {
+//        if (velocity.Vx * velocity.Vy > 0) // 速度向量在1,3象限
+//            CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+//        else // 速度向量在2,4象限
+//            CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+//    }
+		if (velocity_s.Vx>=0)
+			CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+		else
+			CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
     // 计算步伐大小
     R_pace = KR_1 * abs(velocity.omega) + KR_2 * sqrt(pow(velocity.Vx, 2) + pow(velocity.Vy, 2));
-    if (R_pace > 50)
-        R_pace = 50; // 限制步伐大小
+    // 计算步伐时间
+    if (R_pace > MAX_R_PACE)
+        this->pace_time = 1000 / (R_pace / MAX_R_PACE); // 若超过最大步伐大小则缩小步伐时间
+    else
+        this->pace_time = 1000; // 若小于最大步伐大小则固定步伐时间
+    if (R_pace > MAX_R_PACE)
+        R_pace = MAX_R_PACE; // 限制步伐大小
     CEN.y = -CEN.x * velocity.Vx / velocity.Vy;
 }
 
@@ -111,9 +122,9 @@ void Gait_prg::CEN_and_pace_cal()
 void Gait_prg::gait_proggraming()
 {
     Position3 Vec_CEN2leg_ends[6];    // 圆心到腿部末端的向量
-    float angle_off[6];               // 圆心与机械腿末端的夹角
-    float norm_CEN2legs[6];           // 圆心到机械腿末端的模长
-    float Rp_ratios[6];               // 各个机械腿步态规划的大小比例
+    static float angle_off[6];        // 圆心与机械腿末端的夹角
+    static float norm_CEN2legs[6];    // 圆心到机械腿末端的模长
+    static float Rp_ratios[6];        // 各个机械腿步态规划的大小比例
     Position3 Vec_Leg_Start2CEN_s[6]; // 腿部起始端到圆心起始端的向量
     for (int i = 0; i < 6; i++)
     {
@@ -127,7 +138,7 @@ void Gait_prg::gait_proggraming()
         if (norm_CEN2legs[i] > max_norm_CEN2legs)
             max_norm_CEN2legs = norm_CEN2legs[i]; // 选出最大模长
 
-    float R_paces[6]; // 各个机械腿的步长
+    static float R_paces[6]; // 各个机械腿的步长
     for (int i = 0; i < 6; i++)
     {
         Rp_ratios[i] = norm_CEN2legs[i] / max_norm_CEN2legs; // 计算各个机械腿步态规划的大小比例
@@ -136,12 +147,10 @@ void Gait_prg::gait_proggraming()
     float d_theta = 2 * R_paces[0] / norm_CEN2legs[0]; // 计算机械腿走一步绕圆心拐的角度，随便拿一组数据来算就行
     float step_size = d_theta / (N_POINTS / 2);
 
-
     /*********先对腿1，3，5做步态规划***********/
-    float angle_t; // 用于计算该点的角度
-    float y_temp;  // 用于计算z轴高度的临时变量
-    Position3 point; //用于存储末端坐标点
-		tic = xTaskGetTickCount();
+    static float angle_t;   // 用于计算该点的角度
+    static float y_temp;    // 用于计算z轴高度的临时变量
+    static Position3 point; // 用于存储末端坐标点
     for (int i = 0; i < 5; i += 2)
     {
         if (LegControl_round < N_POINTS / 2) // 0-9, 画下半圆
@@ -153,36 +162,48 @@ void Gait_prg::gait_proggraming()
         }
         else // 10-19，画上半圆
         {
-            angle_t = angle_off[i] - d_theta / 2 + step_size * (LegControl_round - N_POINTS/2); // 计算这个点的角度
-            point.x = Vec_Leg_Start2CEN_s[i].x + norm_CEN2legs[i] * cos(angle_t);       // 计算这个点的x轴坐标(相对于机械腿起始端)
-            point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);       // 计算这个点的y轴坐标(相对于机械腿起始端)
-            y_temp = -R_pace + (LegControl_round - N_POINTS/2) * (R_pace * 4 / N_POINTS);
+            angle_t = angle_off[i] - d_theta / 2 + step_size * (LegControl_round - N_POINTS / 2); // 计算这个点的角度
+            point.x = Vec_Leg_Start2CEN_s[i].x + norm_CEN2legs[i] * cos(angle_t);                 // 计算这个点的x轴坐标(相对于机械腿起始端)
+            point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);                 // 计算这个点的y轴坐标(相对于机械腿起始端)
+            y_temp = -R_pace + (LegControl_round - N_POINTS / 2) * (R_pace * 4 / N_POINTS);
             // 根据圆的大小缩小z轴高度,并迁移坐标系到机械腿末端,因为站立时z轴都是一样的，所以随便用一个Pw就行
-            point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
+            if(R_pace>0.5f&&R_pace<MIN_Z_PACE)
+                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i]*3 + Pws[i].z;    
+            else
+                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
         }
+        Point_detect[i][LegControl_round] = point;
         actions[i].thetas[LegControl_round] = ikine(point);
     }
-		
+
     /*********对腿2，4，6做步态规划***********/
-    for(int i = 1; i <=5;i+=2)
+    for (int i = 1; i <= 5; i += 2)
     {
-        if(LegControl_round < N_POINTS / 2) // 0-9, 画上半圆
+        if (LegControl_round < N_POINTS / 2) // 0-9, 画上半圆
         {
-            angle_t = angle_off[i] - d_theta / 2 + step_size * LegControl_round; // 计算这个点的角度
-            point.x = Vec_Leg_Start2CEN_s[i].x + norm_CEN2legs[i] * cos(angle_t);       // 计算这个点的x轴坐标(相对于机械腿起始端)
-            point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);       // 计算这个点的y轴坐标(相对于机械腿起始端)
+            angle_t = angle_off[i] - d_theta / 2 + step_size * LegControl_round;  // 计算这个点的角度
+            point.x = Vec_Leg_Start2CEN_s[i].x + norm_CEN2legs[i] * cos(angle_t); // 计算这个点的x轴坐标(相对于机械腿起始端)
+            point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t); // 计算这个点的y轴坐标(相对于机械腿起始端)
             y_temp = -R_pace + LegControl_round * (R_pace * 4 / N_POINTS);
             // 根据圆的大小缩小z轴高度,并迁移坐标系到机械腿末端,因为站立时z轴都是一样的，所以随便用一个Pw就行
-            point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
+            if(R_pace>0.5f&&R_pace<MIN_Z_PACE)
+                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] *3+ Pws[i].z;
+            else
+                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
         }
         else // 10-19, 画下半圆
         {
-            angle_t = angle_off[i] + d_theta / 2 - step_size * (LegControl_round-N_POINTS/2);  // 计算这个点的角度
-            point.x = Vec_Leg_Start2CEN_s[i].x + norm_CEN2legs[i] * cos(angle_t); // 计算这个点的x轴坐标(相对于机械腿起始端)
-            point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t); // 计算这个点的y轴坐标(相对于机械腿起始端)
-            point.z = Pws[i].z; 
+            angle_t = angle_off[i] + d_theta / 2 - step_size * (LegControl_round - N_POINTS / 2); // 计算这个点的角度
+            point.x = Vec_Leg_Start2CEN_s[i].x + norm_CEN2legs[i] * cos(angle_t);                 // 计算这个点的x轴坐标(相对于机械腿起始端)
+            point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);                 // 计算这个点的y轴坐标(相对于机械腿起始端)
+            point.z = Pws[i].z;
         }
+        Point_detect[i][LegControl_round] = point;
         actions[i].thetas[LegControl_round] = ikine(point);
     }
-		toc = xTaskGetTickCount()-tic;
+}
+
+uint32_t Gait_prg::get_pace_time()
+{
+    return this->pace_time;
 }

@@ -4,18 +4,17 @@
 
 uint8_t debug_str[DEBUG_STR_LEN];
 
-
 /**
  * @brief 串口初始化并开始接收
  * @param 无
  * @return 无
  */
- 
+
 static uint8_t msg;
 void Debug_UART_Init(void)
 {
-		HAL_DEBUG_UART_Init();
-		HAL_UART_Receive_IT(&DEBUG_UART_h,&msg,1); //串口开始接收
+	HAL_DEBUG_UART_Init();
+	HAL_UART_Receive_IT(&DEBUG_UART_h, &msg, 1); // 串口开始接收
 }
 
 /**
@@ -24,8 +23,8 @@ void Debug_UART_Init(void)
  */
 void Debug_UART_Callback(UART_HandleTypeDef *huart)
 {
-		HAL_UART_Transmit(&DEBUG_UART_h, &msg, 1, 1000); //数据原封不动发回去
-		HAL_UART_Receive_IT(&DEBUG_UART_h,&msg,1); //串口开始接收
+	HAL_UART_Transmit(&DEBUG_UART_h, &msg, 1, 1000); // 数据原封不动发回去
+	HAL_UART_Receive_IT(&DEBUG_UART_h, &msg, 1);	 // 串口开始接收
 }
 
 /**
@@ -35,13 +34,11 @@ void Debug_UART_Callback(UART_HandleTypeDef *huart)
  */
 void Debug_UART_print(uint8_t *str, int bytes)
 {
-    //HAL_UART_Transmit(&DEBUG_UART_h, str, bytes, 0xffff);
-		HAL_UART_Transmit_DMA(&DEBUG_UART_h,str,bytes);
+	// HAL_UART_Transmit(&DEBUG_UART_h, str, bytes, 0xffff);
+	HAL_UART_Transmit_DMA(&DEBUG_UART_h, str, bytes);
 }
 
-
-
-//重定向fputc
+// 重定向fputc
 #ifdef __GNUC__
 #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #else
@@ -50,6 +47,6 @@ void Debug_UART_print(uint8_t *str, int bytes)
 PUTCHAR_PROTOTYPE
 {
 	HAL_UART_Transmit(&DEBUG_UART_h, (uint8_t *)&ch, 1, 0xFFFF);
- 
+
 	return ch;
 }

@@ -4,7 +4,7 @@
 
 RC_remote_data_t rc_remote_data;
 volatile uint8_t RC_remote_buffer[REMOTE_DATA_LEN];
-
+uint32_t remote_hock;
 uint8_t msg;
 
 //初始化
@@ -15,6 +15,7 @@ void Remote_Init()
 	//HAL_UART_Receive_DMA(&REMOTE_UART_h,(uint8_t *)&rc_remote_data,REMOTE_DATA_LEN); //开始DMA传输
 	HAL_UART_Receive_IT(&REMOTE_UART_h,(uint8_t*)RC_remote_buffer,REMOTE_DATA_LEN);
 }
+
 
 
 //读遥控数据
@@ -28,17 +29,17 @@ RC_remote_data_t Remote_read_data()
 	remote_data_buffer.left_HRZC -=1024;
 	remote_data_buffer.left_VETC -=1024;
 	remote_data_buffer.right_HRZC -=1024;
-	remote_data_buffer.right_HRZC -=1024;
+	remote_data_buffer.right_VETC -=1024;
 	remote_data_buffer.thumb_wheel -=1024;
 	//check if the data is vaild
-	if(remote_data_buffer.left_HRZC>700 || remote_data_buffer.left_HRZC<-700||
-		 remote_data_buffer.left_VETC>700 || remote_data_buffer.left_VETC<-700||
-		 remote_data_buffer.right_HRZC>700 || remote_data_buffer.right_HRZC<-700||
-		 remote_data_buffer.right_HRZC>700 || remote_data_buffer.right_HRZC<-700||
-		 remote_data_buffer.thumb_wheel>700 || remote_data_buffer.thumb_wheel<-700||
-		 remote_data_buffer.S1==0 || remote_data_buffer.S1==1||
-		 remote_data_buffer.mouse_l !=0 || remote_data_buffer.mouse_l !=1||
-		 remote_data_buffer.mouse_r !=0 || remote_data_buffer.mouse_r !=1
+	if(remote_data_buffer.left_HRZC>800 || remote_data_buffer.left_HRZC<-800||
+		 remote_data_buffer.left_VETC>800 || remote_data_buffer.left_VETC<-800||
+		 remote_data_buffer.right_HRZC>800 || remote_data_buffer.right_HRZC<-800||
+		 remote_data_buffer.right_VETC>800 || remote_data_buffer.right_VETC<-800||
+		 remote_data_buffer.thumb_wheel>800 || remote_data_buffer.thumb_wheel<-800||
+		 remote_data_buffer.S1==0 || remote_data_buffer.S1==0||
+		 (remote_data_buffer.mouse_l !=0 && remote_data_buffer.mouse_l !=1)||
+		 (remote_data_buffer.mouse_r !=0 && remote_data_buffer.mouse_r !=1)
 	  )
 	{
 		//restart remote uart
@@ -47,9 +48,22 @@ RC_remote_data_t Remote_read_data()
 		//__HAL_DMA_SET_COUNTER(REMOTE_UART_h.hdmarx,REMOTE_DATA_LEN);
 		return zero_data;
 	}
-	else
-		return remote_data_buffer;
+	//死区处理
+	if(remote_data_buffer.left_HRZC>-25&&remote_data_buffer.left_HRZC<25)
+		remote_data_buffer.left_HRZC = 0;
+	if(remote_data_buffer.left_VETC>-25&&remote_data_buffer.left_VETC<25)
+		remote_data_buffer.left_VETC = 0;
+	if(remote_data_buffer.right_HRZC>-25&&remote_data_buffer.right_HRZC<25)
+		remote_data_buffer.right_HRZC = 0;
+	if(remote_data_buffer.right_VETC>-25&&remote_data_buffer.right_VETC<25)
+		remote_data_buffer.right_VETC = 0;
+	if(remote_data_buffer.thumb_wheel>-25&&remote_data_buffer.thumb_wheel<25)
+		remote_data_buffer.thumb_wheel = 0;
+	
+	return remote_data_buffer;
 }
+
+
 
 void Remote_UART_Callback(UART_HandleTypeDef *huart)
 {
@@ -60,7 +74,7 @@ void Remote_UART_Callback(UART_HandleTypeDef *huart)
 						                  ((int16_t)RC_remote_buffer[4] << 10)) & 0x07ff;
 	rc_remote_data.left_VETC = ((int16_t)(RC_remote_buffer[4] >> 1) | ((int16_t)RC_remote_buffer[5] << 7)) & 0x07ff; //!< Channel 3
 	
-	if(rc_remote_data.left_HRZC<1024)rc_remote_data.left_HRZC+=520;
+	if(rc_remote_data.left_HRZC<1024)rc_remote_data.left_HRZC+=520; //软件校准偏差
 	rc_remote_data.S1 = ((RC_remote_buffer[5] >> 4) & 0x0003);							   //!< Switch left
 	rc_remote_data.S2 = ((RC_remote_buffer[5] >> 4) & 0x000C) >> 2;						   //!< Switch right
 	rc_remote_data.mouse_x = RC_remote_buffer[6] | (RC_remote_buffer[7] << 8);					   //!< Mouse X axis
@@ -71,5 +85,6 @@ void Remote_UART_Callback(UART_HandleTypeDef *huart)
 	rc_remote_data.thumb_wheel = RC_remote_buffer[16] | (RC_remote_buffer[17] << 8);				   //NULL
 
 	HAL_UART_Receive_IT(&REMOTE_UART_h,(uint8_t *)RC_remote_buffer,REMOTE_DATA_LEN);
+	remote_hock=0;  //接收到数据后归零
 }
 

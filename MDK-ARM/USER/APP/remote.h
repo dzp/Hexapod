@@ -5,10 +5,10 @@
 #include "dma.h"
 
 /***********改串口号的话要改这里****************/
-#define HAL_REMOTE_UART_Init MX_USART3_UART_Init
+#define HAL_REMOTE_UART_Init MX_UART7_Init
 #define REMOTE_UART_Callback HAL_UART_RxCpltCallback
-#define REMOTE_UART USART3
-#define REMOTE_UART_h huart3
+#define REMOTE_UART UART7
+#define REMOTE_UART_h huart7
 #define HAL_REMOTE_DMA_Init MX_DMA_Init
 /************************************************/
 
@@ -40,6 +40,9 @@ typedef struct
 void Remote_Init(void);
 RC_remote_data_t Remote_read_data(void);
 void Remote_UART_Callback(UART_HandleTypeDef *huart);
+
+extern uint32_t remote_hock;
+
 #ifdef __cplusplus
 }
 #endif

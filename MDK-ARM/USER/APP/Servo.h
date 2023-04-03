@@ -15,20 +15,21 @@ public:
 	Servo(uint8_t id){this->id=id;};
 	void set_angle(float angle);
 	void set_time(uint16_t move_time);
-	void move(UART_HandleTypeDef *huart);	   // 直接移动
-	void move_wait(UART_HandleTypeDef *huart); // 设定舵机角度，但是需要等待开始指令才开始移动
+	void move(uint8_t* send_buffer);	   // 直接移动
+	void move_wait(uint8_t* send_buffer); // 设定舵机角度，但是需要等待开始指令才开始移动
+	void read_angle(uint8_t* send_buffer);          //读取舵机角度
 };
 
 class Servo_Broad_Cast
 {
 public:
-	void move_start(UART_HandleTypeDef *huart); // 舵机开始移动
-	void move_stop(UART_HandleTypeDef *huart);	// 舵机停止移动
-	void upload(UART_HandleTypeDef *huart);		// 舵机掉电
-	void load(UART_HandleTypeDef *huart);		// 舵机上电
+	void move_start(uint8_t* send_buffer); // 舵机开始移动
+	void move_stop(uint8_t* send_buffer);	// 舵机停止移动
+	void unload(uint8_t* send_buffer);		// 舵机掉电
+	void load(uint8_t* send_buffer);		// 舵机上电
 };
 
-// 指令名
+// 发送指令名
 #define SERVO_MOVE_TIME_WRITE 1
 #define SERVO_MOVE_TIME_READ 2
 #define SERVO_MOVE_TIME_WAIT_WRITE 7
@@ -87,6 +88,23 @@ public:
 #define SERVO_LED_CTRL_READ_LEN 3
 #define SERVO_LED_ERROR_WRITE_LEN 4
 #define SERVO_LED_ERROR_READ_LEN 3
+
+
+//接收指令长度
+#define RECV_SERVO_MOVE_TIME_READ_LEN 7
+#define RECV_SERVO_MOVE_TIME_WAIT_READ_LEN 7
+#define RECV_SERVO_ID_READ_LEN 4
+#define RECV_SERVO_ANGLE_OFFSET_READ_LEN 4
+#define RECV_SERVO_ANGLE_LIMIT_READ_LEN 7
+#define RECV_SERVO_VIN_LIMIT_READ_LEN 7
+#define RECV_SERVO_TEMP_MAX_LIMIT_READ_LEN 4
+#define RECV_SERVO_TEMP_READ_LEN 4
+#define RECV_SERVO_VIN_READ_LEN 5
+#define RECV_SERVO_POS_READ_LEN 5
+#define RECV_SERVO_OR_MOTOR_MODE_READ_LEN 7
+#define RECV_SERVO_LOAD_OR_UNLOAD_READ_LEN 4
+#define RECV_SERVO_LED_CTRL_READ_LEN 4
+#define RECV_SERVO_LED_ERROR_READ_LEN 4
 
 #define SERVO_BROADCAST_ID 0xFE // 广播id
 

@@ -1541,6 +1541,11 @@
               <FileType>8</FileType>
               <FilePath>.\USER\APP\gait_prg.cpp</FilePath>
             </File>
+            <File>
+              <FileName>dwt_delay_us.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\USER\APP\dwt_delay_us.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

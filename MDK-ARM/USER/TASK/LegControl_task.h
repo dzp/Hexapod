@@ -1,9 +1,7 @@
 #ifndef LEGCONTROL_TASK_H
 #define LEGCONTROL_TASK_H
 
-
-
-
-
+#define LEG_JOINT2_OFFSET PI/2
+#define LEG_JOINT3_OFFSET -2 * PI / 9
 
 #endif

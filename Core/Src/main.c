@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "debug_uart.h"
 #include "remote.h"
+#include "dwt_delay_us.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,6 +81,7 @@ int main(void)
 	/************硬件初始化***************/
 	Debug_UART_Init();
 	Remote_Init();
+	DWT_Delay_Init();
 	/************启用FreeRTOS***************/
 	MX_FREERTOS_Init();  //初始化任务
 	osKernelStart(); //开始任务调度

@@ -18,3 +18,36 @@ Position3 operator-(const Position3& pos1,const Position3& pos2)
     pos.z = pos1.z - pos2.z;
     return pos;
 }
+
+Thetas operator+(const Thetas& theta1, const Thetas& theta2)
+{
+    Thetas theta;
+    theta.angle[0] = theta1.angle[0] + theta2.angle[0];
+    theta.angle[1] = theta1.angle[1] + theta2.angle[1];
+    theta.angle[2] = theta1.angle[2] + theta2.angle[2];
+    return theta;
+}
+
+Thetas operator-(const Thetas& theta1, const Thetas& theta2)
+{
+    Thetas theta;
+    theta.angle[0] = theta1.angle[0] - theta2.angle[0];
+    theta.angle[1] = theta1.angle[1] - theta2.angle[1];
+    theta.angle[2] = theta1.angle[2] - theta2.angle[2];
+    return theta;
+}
+
+Thetas& Thetas::operator=(const float angles[3])
+{
+    this->angle[0] = angles[0];
+    this->angle[1] = angles[1];
+    this->angle[2] = angles[2];
+    return *this;
+}
+
+Thetas::Thetas(const float angles[3])
+{
+    this->angle[0] = angles[0];
+    this->angle[1] = angles[1];
+    this->angle[2] = angles[2];
+}

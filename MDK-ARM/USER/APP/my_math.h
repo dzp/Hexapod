@@ -15,7 +15,12 @@ public:
         this->angle[1] = angle_1;
         this->angle[2] = angle_2;
     }
+    Thetas& operator=(const float angles[3]);
+    Thetas(const float angles[3]);
 };
+
+Thetas operator+(const Thetas& theta1, const Thetas& theta2);
+Thetas operator-(const Thetas& theta1, const Thetas& theta2);
 
 class Position3
 {
@@ -33,4 +38,6 @@ public:
 };
 Position3 operator+(const Position3& pos1,const Position3& pos2);
 Position3 operator-(const Position3& pos1,const Position3& pos2);
+
+
 #endif
