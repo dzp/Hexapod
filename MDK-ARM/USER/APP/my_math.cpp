@@ -51,3 +51,11 @@ Thetas::Thetas(const float angles[3])
     this->angle[1] = angles[1];
     this->angle[2] = angles[2];
 }
+
+void value_limit(float &val,float min,float max)
+{
+	if(val>max)
+		val = max;
+	if(val<min)
+		val = min;
+}

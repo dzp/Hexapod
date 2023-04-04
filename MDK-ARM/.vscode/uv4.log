@@ -1,8 +1,10 @@
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\stm32\UV5\Keil\Keil5\ARM\ARMCC\Bin'
 Build target 'hexapod'
-compiling LegControl_task.cpp...
-compiling leg.cpp...
 linking...
-Program Size: Code=37588 RO-data=1244 RW-data=212 ZI-data=24092  
-"app_test\Hexapod.axf" - 0 Error(s), 0 Warning(s).
-Build Time Elapsed:  00:00:02
+app_test\Hexapod.axf: Error: L6218E: Undefined symbol arm_cos_f32 (referred from gait_prg.o).
+Not enough information to list image symbols.
+Not enough information to list load addresses in the image map.
+Finished: 2 information, 0 warning and 1 error messages.
+"app_test\Hexapod.axf" - 1 Error(s), 0 Warning(s).
+Target not created.
+Build Time Elapsed:  00:00:01

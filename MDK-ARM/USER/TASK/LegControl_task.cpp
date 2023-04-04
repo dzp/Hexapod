@@ -21,7 +21,7 @@ Thetas leg_offset[6];	   // 腿部关节角偏移，用于将舵机相对机器人本体的角度换算至
 
 // 函数
 static void Legs_Init(void);
-static void Hexapod_velocity_cal(void);
+static void Hexapod_remote_deal(void);
 static void Hexapod_move(uint32_t round_time);
 extern "C"
 {
@@ -35,13 +35,13 @@ extern "C"
 		{
 			code_time_start = xTaskGetTickCount(); // 获取当前systick时间
 
-			Hexapod_velocity_cal();
+			Hexapod_remote_deal();
 			if (velocity.omega >= 0)
 				LegControl_round = (++LegControl_round) % N_POINTS; // 控制回合自增长
 			else
 			{
 				if (LegControl_round == 0)
-					LegControl_round = 19;
+					LegControl_round = N_POINTS - 1;
 				else
 					LegControl_round--;
 			}
@@ -76,12 +76,6 @@ static void Legs_Init(void)
 	MX_UART4_Init();
 	MX_UART5_Init();
 	MX_USART6_UART_Init();
-	// __LEG1_TXEN();
-	// __LEG2_TXEN();
-	// __LEG3_TXEN();
-	// __LEG4_TXEN();
-	// __LEG5_TXEN();
-	// __LEG6_TXEN();
 	leg_offset[0] = Thetas(PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 	leg_offset[1] = Thetas(0.0f, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 	leg_offset[2] = Thetas(-PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
@@ -90,15 +84,33 @@ static void Legs_Init(void)
 	leg_offset[5] = Thetas(-3 * PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 }
 
+
+
 // 计算机器人速度
-static void Hexapod_velocity_cal(void)
+static void Hexapod_velocity_cal(const RC_remote_data_t &remote_data)
+{
+	velocity.Vx = 0.2 * remote_data.right_HRZC;
+	velocity.Vy = 0.2 * remote_data.right_VETC;
+	velocity.omega = -0.3 * remote_data.left_HRZC;
+}
+
+float height;
+static void Hexapod_height_cal(const RC_remote_data_t &remote_data)
+{
+	height -= 0.03*remote_data.left_VETC;
+	value_limit(height,HEXAPOD_MIN_HEIGHT,HEXAPOD_MAX_HEIGHT);
+	gait_prg.set_height(height);
+}
+
+static void Hexapod_remote_deal(void)
 {
 	static RC_remote_data_t remote_data;
 	remote_data = Remote_read_data();
-	velocity.Vx = 0.15 * remote_data.right_HRZC;
-	velocity.Vy = 0.15 * remote_data.right_VETC;
-	velocity.omega = -0.3 * remote_data.left_HRZC;
+	Hexapod_velocity_cal(remote_data);
+	Hexapod_height_cal(remote_data);
 }
+
+
 
 /*
  * @brief 让机器人动起来
@@ -106,33 +118,26 @@ static void Hexapod_velocity_cal(void)
  */
 static void Hexapod_move(uint32_t round_time)
 {
-	// 设置腿1-4的角度
-	for (int i = 0; i < 4; i++)
+	// 设置腿1-6的角度
+	for (int i = 0; i < 6; i++)
 	{
 		legs[i].set_thetas((gait_prg.actions[i].thetas[LegControl_round]) - leg_offset[i]); // 设置机械腿角度
 		legs[i].set_time(round_time);														// 设置机械腿移动时间
 	}
 	// 设置腿5的角度
-	if (gait_prg.actions[4].thetas[LegControl_round].angle[0] > 0)
-	{
-		legs[4].set_thetas((gait_prg.actions[4].thetas[LegControl_round]) - leg_offset[4]); // 设置机械腿角度
-	}
-	else
+	if (gait_prg.actions[4].thetas[LegControl_round].angle[0] <= 0)
 	{
 		Thetas theta_temp;
 		theta_temp = (gait_prg.actions[4].thetas[LegControl_round]) - leg_offset[4];
 		theta_temp.angle[0] += 2 * PI;
 		legs[4].set_thetas(theta_temp); // 设置机械腿角度
 	}
-	legs[4].set_time(round_time); // 设置机械腿移动时间
-	// 设置腿6的角度
-	legs[5].set_thetas((gait_prg.actions[5].thetas[LegControl_round]) - leg_offset[5]); // 设置机械腿角度
-	legs[5].set_time(round_time);														// 设置机械腿移动时间
+
 
 	legs[0].move_UART();
-	legs[1].move_UART();
-	legs[2].move_UART();
-	legs[3].move_UART();
-	legs[4].move_UART();
+	legs[1].move_DMA();
+	legs[2].move_DMA();
+	legs[3].move_DMA();
+	legs[4].move_DMA();
 	legs[5].move_DMA();
 }

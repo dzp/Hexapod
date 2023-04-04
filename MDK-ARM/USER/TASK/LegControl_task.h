@@ -3,5 +3,7 @@
 
 #define LEG_JOINT2_OFFSET PI/2
 #define LEG_JOINT3_OFFSET -2 * PI / 9
+#define HEXAPOD_MAX_HEIGHT 70.0f
+#define HEXAPOD_MIN_HEIGHT -70.0f
 
 #endif

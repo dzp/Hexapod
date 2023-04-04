@@ -39,5 +39,7 @@ public:
 Position3 operator+(const Position3& pos1,const Position3& pos2);
 Position3 operator-(const Position3& pos1,const Position3& pos2);
 
+void value_limit(float &val,float min,float max);
+
 
 #endif
