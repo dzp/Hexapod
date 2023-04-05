@@ -18,6 +18,7 @@ Velocity velocity;		   // 机器人速度
 Gait_prg gait_prg;		   // 步态规划
 uint32_t round_time;	   // 回合时间
 Thetas leg_offset[6];	   // 腿部关节角偏移，用于将舵机相对机器人本体的角度换算至相对舵机本身的角度
+Hexapod_mode_e hexapod_mode; //机器人模式
 
 // 函数
 static void Legs_Init(void);
@@ -94,20 +95,63 @@ static void Hexapod_velocity_cal(const RC_remote_data_t &remote_data)
 	velocity.omega = -0.3 * remote_data.left_HRZC;
 }
 
-float height;
+
 static void Hexapod_height_cal(const RC_remote_data_t &remote_data)
 {
+	static float height;
 	height -= 0.03*remote_data.left_VETC;
 	value_limit(height,HEXAPOD_MIN_HEIGHT,HEXAPOD_MAX_HEIGHT);
 	gait_prg.set_height(height);
+}
+
+static Position3 body_angle;
+static void Hexapod_body_angle_cal(const RC_remote_data_t &remote_data)
+{
+	body_angle.x = -0.001*remote_data.left_VETC;
+	body_angle.y = -0.001*remote_data.left_HRZC;
+	body_angle.z = 0.001*remote_data.right_HRZC;
+	value_limit(body_angle.x,HEXAPOD_MIN_X_ROTATE,HEXAPOD_MAX_X_ROTATE);
+	value_limit(body_angle.y,HEXAPOD_MIN_Y_ROTATE,HEXAPOD_MAX_Y_ROTATE);
+	value_limit(body_angle.z,HEXAPOD_MIN_Z_ROTATE,HEXAPOD_MAX_Z_ROTATE);
+	
+	gait_prg.set_body_rotate_angle(body_angle);
+}
+
+static void Hexapod_mode_select(const RC_remote_data_t &remote_data)
+{
+	switch(remote_data.S1)
+	{
+		case 1: //拨杆在上面
+			hexapod_mode = HEXAPOD_MOVE;
+			break;
+		case 2:
+			hexapod_mode = HEXAPOD_DANCE;
+			break;
+		default:
+			break;
+	}
 }
 
 static void Hexapod_remote_deal(void)
 {
 	static RC_remote_data_t remote_data;
 	remote_data = Remote_read_data();
-	Hexapod_velocity_cal(remote_data);
-	Hexapod_height_cal(remote_data);
+	Hexapod_mode_select(remote_data);
+	switch(hexapod_mode)
+	{
+		case HEXAPOD_MOVE:
+			Hexapod_velocity_cal(remote_data);
+			Hexapod_height_cal(remote_data);
+			body_angle.zero();
+			gait_prg.set_body_rotate_angle(body_angle);
+			break;
+		case HEXAPOD_DANCE:
+			Hexapod_body_angle_cal(remote_data);
+			break;
+		default:
+			break;
+	}
+
 }
 
 

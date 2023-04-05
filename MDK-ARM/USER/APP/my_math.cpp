@@ -1,6 +1,13 @@
 #include "my_math.h"
 
 
+void Position3::zero()
+{
+    x = 0;
+    y = 0;
+    z = 0;
+}
+
 Position3 operator+(const Position3& pos1,const Position3& pos2)
 {
     Position3 pos;

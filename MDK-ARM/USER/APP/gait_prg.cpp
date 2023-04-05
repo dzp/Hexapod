@@ -35,6 +35,9 @@ void Gait_prg::Init()
     P_legs[5] = Position3(-CHASSIS_FRONT_WIDTH / 2, -CHASSIS_LEN / 2, 0);
 }
 
+
+
+
 /*
  * 正运动解算
  */
@@ -65,16 +68,22 @@ static Thetas ikine(Position3 &pos)
     return thetas;
 }
 
+void Gait_prg::set_body_rotate_angle(Position3 &rotate_angle)
+{
+    this->rotate_angle = rotate_angle;
+}
+
 /*
  *@brief 通过机身旋转角度，计算机械腿末端位置
- *@param 
+ *@param point 腿末端相对于起始端的坐标，
+ *@param index 腿的编号
  */
 Position3 Gait_prg::hexapod_rotate(Position3 &point,uint32_t index)
 {
     Position3 retvel;
-    retvel.x = cos(rotate_angle.y)*cos(rotate_angle.z)*(P_legs[index].x + Pws[index].x) - cos(rotate_angle.y)*sin(rotate_angle.z)*(P_legs[index].y + Pws[index].y);
-    retvel.y = (cos(rotate_angle.x)*sin(rotate_angle.z) + cos(rotate_angle.z)*sin(rotate_angle.x)*sin(rotate_angle.y))*(P_legs[index].x + Pws[index].x) + (cos(rotate_angle.x)*cos(rotate_angle.z) - sin(rotate_angle.x)*sin(rotate_angle.y)*sin(rotate_angle.z))*(P_legs[index].y + Pws[index].y);
-    retvel.z =  Pws[index].z + (sin(rotate_angle.x)*sin(rotate_angle.z) - cos(rotate_angle.x)*cos(rotate_angle.z)*sin(rotate_angle.y))*(P_legs[index].x + Pws[index].x) + (cos(rotate_angle.z)*sin(rotate_angle.x) + cos(rotate_angle.x)*sin(rotate_angle.y)*sin(rotate_angle.z))*(P_legs[index].y + Pws[index].y);
+    retvel.x = cos(rotate_angle.y)*cos(rotate_angle.z)*(P_legs[index].x + point.x) - cos(rotate_angle.y)*sin(rotate_angle.z)*(P_legs[index].y + point.y);
+    retvel.y = (cos(rotate_angle.x)*sin(rotate_angle.z) + cos(rotate_angle.z)*sin(rotate_angle.x)*sin(rotate_angle.y))*(P_legs[index].x + point.x) + (cos(rotate_angle.x)*cos(rotate_angle.z) - sin(rotate_angle.x)*sin(rotate_angle.y)*sin(rotate_angle.z))*(P_legs[index].y + point.y);
+    retvel.z =  point.z + (sin(rotate_angle.x)*sin(rotate_angle.z) - cos(rotate_angle.x)*cos(rotate_angle.z)*sin(rotate_angle.y))*(P_legs[index].x + point.x) + (cos(rotate_angle.z)*sin(rotate_angle.x) + cos(rotate_angle.x)*sin(rotate_angle.y)*sin(rotate_angle.z))*(P_legs[index].y + point.y);
     retvel = retvel - P_legs[index];
     return retvel;
 }
@@ -190,8 +199,8 @@ void Gait_prg::gait_proggraming()
             else
                 point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
         }
-        Point_detect[i][LegControl_round] = point;
         point = hexapod_rotate(point,i);
+        Point_detect[i][LegControl_round] = point;
         actions[i].thetas[LegControl_round] = ikine(point);
     }
 
@@ -217,8 +226,8 @@ void Gait_prg::gait_proggraming()
             point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);                 // 计算这个点的y轴坐标(相对于机械腿起始端)
             point.z = Pws[i].z;
         }
-        Point_detect[i][LegControl_round] = point;
         point = hexapod_rotate(point,i);
+        Point_detect[i][LegControl_round] = point;
         actions[i].thetas[LegControl_round] = ikine(point);
     }
 }

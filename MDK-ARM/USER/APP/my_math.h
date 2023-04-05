@@ -34,6 +34,7 @@ public:
         this->y = y;
         this->z = z;
     }
+    void zero(); //น้มใ
       
 };
 Position3 operator+(const Position3& pos1,const Position3& pos2);

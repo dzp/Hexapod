@@ -55,6 +55,7 @@ public:
     void gait_proggraming();
     uint32_t get_pace_time();
     void set_height(float height);
+    void set_body_rotate_angle(Position3 &rotate_angle);
 };
 
 #endif
