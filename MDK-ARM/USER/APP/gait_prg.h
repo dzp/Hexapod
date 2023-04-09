@@ -56,6 +56,7 @@ public:
     uint32_t get_pace_time();
     void set_height(float height);
     void set_body_rotate_angle(Position3 &rotate_angle);
+    void set_body_position(Position3 &pos);
 };
 
 #endif

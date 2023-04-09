@@ -5,11 +5,13 @@
 #include "usart.h"
 
 
+
+
 extern "C"{
-	
-	
 void LED_Task(void const * argument)
 {
+	osDelay(100);
+	osDelay(100);
 	while(1)
 	{
 		if((remote_hock++)>3)
@@ -21,6 +23,4 @@ void LED_Task(void const * argument)
 		osDelay(100);
 	}
 }
-
-
 }

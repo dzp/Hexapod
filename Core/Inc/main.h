@@ -83,6 +83,13 @@ void Error_Handler(void);
 #define LEG2_TXE_GPIO_Port GPIOD
 #define LEG2_RXE_Pin GPIO_PIN_4
 #define LEG2_RXE_GPIO_Port GPIOD
+#define MPU6050_SDA_Pin GPIO_PIN_7
+#define MPU6050_SDA_GPIO_Port GPIOB
+#define MPU6050_SCL_Pin GPIO_PIN_8
+#define MPU6050_SCL_GPIO_Port GPIOB
+#define MPU6050_INT_Pin GPIO_PIN_9
+#define MPU6050_INT_GPIO_Port GPIOB
+#define MPU6050_INT_EXTI_IRQn EXTI9_5_IRQn
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

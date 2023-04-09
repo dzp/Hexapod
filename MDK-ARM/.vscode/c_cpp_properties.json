@@ -15,6 +15,7 @@
                 "e:\\CubeMX\\PRJ\\STM32H7xx\\Hexapod\\MDK-ARM\\USER\\TASK",
                 "e:\\CubeMX\\PRJ\\STM32H7xx\\Hexapod\\Middlewares\\ST\\ARM\\DSP\\Inc",
                 "e:\\CubeMX\\PRJ\\STM32H7xx\\Hexapod\\Drivers\\CMSIS\\DSP\\Lib\\ARM",
+                "e:\\CubeMX\\PRJ\\STM32H7xx\\Hexapod\\MDK-ARM\\USER\\DMP",
                 "D:\\stm32\\UV5\\Keil\\Keil5\\ARM\\ARMCC\\include",
                 "D:\\stm32\\UV5\\Keil\\Keil5\\ARM\\ARMCC\\include\\rw",
                 "e:\\CubeMX\\PRJ\\STM32H7xx\\Hexapod\\MDK-ARM",

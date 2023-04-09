@@ -20,6 +20,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "dma.h"
+#include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -55,7 +56,17 @@ void SystemClock_Config(void);
 static void MPU_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
+/**
+ * @brief       使能STM32H7的L1-Cache, 同时开启D cache的强制透写
+ * @param       无
+ * @retval      无
+ */
+void sys_cache_enable(void)
+{
+    //SCB_EnableICache(); /* 使能I-Cache,函数在core_cm7.h里面定义 */
+    SCB_EnableDCache(); /* 使能D-Cache,函数在core_cm7.h里面定义 */
+    SCB->CACR |= 1 << 2;/* 强制D-Cache透写,如不开启透写,实际使用中可能遇到各种问题 */
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -66,8 +77,9 @@ void MX_FREERTOS_Init(void);
   */
 int main(void)
 {
+  
 	SCB->VTOR = 0x90000000; /* 设置中断向量表地址 */
-
+  sys_cache_enable();
   //MPU_Config();   //去掉注释会导致进入异常
 
   /* MCU Configuration--------------------------------------------------------*/

@@ -35,6 +35,18 @@
         "utility": "cpp",
         "xmemory": "cpp",
         "xstddef": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "inv_mpu.h": "c",
+        "dmp_interface.h": "c",
+        "mpu6050.h": "c",
+        "i2c.h": "c",
+        "main.h": "c",
+        "math.h": "c",
+        "stdlib.h": "c",
+        "stdint.h": "c",
+        "string.h": "c",
+        "dmpkey.h": "c",
+        "dmpmap.h": "c",
+        "inv_mpu_dmp_motion_driver.h": "c"
     }
 }

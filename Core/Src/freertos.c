@@ -50,6 +50,7 @@
 osThreadId defaultTaskHandle;
 osThreadId LED_taskHandle;
 osThreadId LegControl_taskHandle;
+osThreadId MPU_taskHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -59,6 +60,7 @@ osThreadId LegControl_taskHandle;
 void StartDefaultTask(void const * argument);
 extern void LED_Task(void const * argument);
 extern void LegControl_Task(void const * argument);
+extern void MPU_Task(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -116,6 +118,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of LegControl_task */
   osThreadDef(LegControl_task, LegControl_Task, osPriorityRealtime, 0, 1024);
   LegControl_taskHandle = osThreadCreate(osThread(LegControl_task), NULL);
+
+  /* definition and creation of MPU_task */
+  osThreadDef(MPU_task, MPU_Task, osPriorityIdle, 0, 256);
+  MPU_taskHandle = osThreadCreate(osThread(MPU_task), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

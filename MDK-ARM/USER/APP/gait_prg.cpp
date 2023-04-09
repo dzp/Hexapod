@@ -101,6 +101,18 @@ void Gait_prg::set_height(float height)
 }
 
 /*
+ *@brief 设置机器人身体位置
+ *@param pos 机器人的身体位置
+ */
+void Gait_prg::set_body_position(Position3 &pos)
+{
+    for (int i = 0; i < 6;i++)
+    {
+        Pws[i] = Pws_default[i] - pos;
+    }
+}
+
+/*
  * 计算圆心位置和步伐大小已及步伐执行时间
  */
 void Gait_prg::CEN_and_pace_cal(Velocity velocity)

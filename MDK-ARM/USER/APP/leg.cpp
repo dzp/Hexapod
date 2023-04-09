@@ -49,7 +49,6 @@ void Leg::move_UART()
 	this->servos[1].move(this->send_buffer + SERVO_MOVE_TIME_WRITE_LEN + 3);
 	this->servos[2].move(this->send_buffer + (SERVO_MOVE_TIME_WRITE_LEN + 3) * 2);
 	HAL_UART_Transmit(this->huart, this->send_buffer, (SERVO_MOVE_TIME_WRITE_LEN + 3) * 3, 1000);
-	this->TX_Unable();
 }
 
 void Leg::move_wait()

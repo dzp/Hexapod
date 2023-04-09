@@ -13,22 +13,20 @@ using namespace std;
 
 // 全局变量
 uint32_t LegControl_round; // 机器人回合数
-Leg legs[6];			   // 六条腿
-Velocity velocity;		   // 机器人速度
+Hexapod hexapod;  //机器人结构体
+
 Gait_prg gait_prg;		   // 步态规划
 uint32_t round_time;	   // 回合时间
 Thetas leg_offset[6];	   // 腿部关节角偏移，用于将舵机相对机器人本体的角度换算至相对舵机本身的角度
-Hexapod_mode_e hexapod_mode; //机器人模式
+
 
 // 函数
-static void Legs_Init(void);
-static void Hexapod_remote_deal(void);
-static void Hexapod_move(uint32_t round_time);
+static void remote_deal(void);
 extern "C"
 {
 	void LegControl_Task(void const *argument)
 	{
-		Legs_Init();
+		hexapod.Init();
 		gait_prg.Init();
 		osDelay(100);
 		static uint32_t code_time_start, code_time_end, code_time; // 用于计算程序运行时间，保证程序隔一段时间跑一遍
@@ -36,8 +34,8 @@ extern "C"
 		{
 			code_time_start = xTaskGetTickCount(); // 获取当前systick时间
 
-			Hexapod_remote_deal();
-			if (velocity.omega >= 0)
+			remote_deal();
+			if (hexapod.velocity.omega >= 0)
 				LegControl_round = (++LegControl_round) % N_POINTS; // 控制回合自增长
 			else
 			{
@@ -46,14 +44,15 @@ extern "C"
 				else
 					LegControl_round--;
 			}
-
-			gait_prg.CEN_and_pace_cal(velocity);
+			/*步态控制*/
+			gait_prg.CEN_and_pace_cal(hexapod.velocity);
 			gait_prg.gait_proggraming();
+			/*开始移动*/
 			round_time = gait_prg.get_pace_time() / N_POINTS;
-			Hexapod_move(round_time);
+			hexapod.move(round_time);
 			// 计算程序运行时间
 			code_time_end = xTaskGetTickCount();		 // 获取当前systick时间
-			code_time = code_time_end - code_time_start; // 做差获取程序运行时间
+			code_time = code_time_end - code_time_start; // 做差获取程序运行时间（8ms）
 			if (code_time < round_time)
 				osDelay(round_time - code_time); // 保证程序执行周期等于回合时间
 			else
@@ -63,7 +62,7 @@ extern "C"
 }
 
 // 初始化腿部变量并初始化串口，使能串口发送
-static void Legs_Init(void)
+void Hexapod::Init(void)
 {
 	legs[0] = Leg(&huart1);
 	legs[1] = Leg(&huart2);
@@ -88,25 +87,38 @@ static void Legs_Init(void)
 
 
 // 计算机器人速度
-static void Hexapod_velocity_cal(const RC_remote_data_t &remote_data)
+void Hexapod::velocity_cal(const RC_remote_data_t &remote_data)
 {
+	if(this->mode != HEXAPOD_MOVE) //若不是行走模式则直接返回，不计算速度
+		return;
 	velocity.Vx = 0.2 * remote_data.right_HRZC;
 	velocity.Vy = 0.2 * remote_data.right_VETC;
 	velocity.omega = -0.3 * remote_data.left_HRZC;
 }
 
 
-static void Hexapod_height_cal(const RC_remote_data_t &remote_data)
+void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
 {
-	static float height;
-	height -= 0.03*remote_data.left_VETC;
-	value_limit(height,HEXAPOD_MIN_HEIGHT,HEXAPOD_MAX_HEIGHT);
-	gait_prg.set_height(height);
+	if(this->mode !=HEXAPOD_BODY_ANGEL_CONTROL)	//除了姿态控制模式，其他情况下都能控制z轴高度
+		body_pos.z += 0.03*remote_data.left_VETC;   
+	if(this->mode==HEXAPOD_BODY_POS_CONTROL)  //若是身体位置控制模式则计算xy位置
+	{
+		body_pos.y += 0.03*remote_data.right_VETC;
+		body_pos.x += 0.03*remote_data.right_HRZC;
+	}
+	
+	value_limit(body_pos.z,HEXAPOD_MIN_HEIGHT,HEXAPOD_MAX_HEIGHT);
+	value_limit(body_pos.y,HEXAPOD_MIN_Y,HEXAPOD_MAX_Y);
+	value_limit(body_pos.x,HEXAPOD_MIN_X,HEXAPOD_MAX_X);
+	gait_prg.set_body_position(body_pos);
 }
 
-static Position3 body_angle;
-static void Hexapod_body_angle_cal(const RC_remote_data_t &remote_data)
+
+
+void Hexapod::body_angle_cal(const RC_remote_data_t &remote_data)
 {
+	if(this->mode != HEXAPOD_BODY_ANGEL_CONTROL) //若不是姿态控制模式则直接返回
+		return;
 	body_angle.x = -0.001*remote_data.left_VETC;
 	body_angle.y = -0.001*remote_data.left_HRZC;
 	body_angle.z = 0.001*remote_data.right_HRZC;
@@ -117,41 +129,45 @@ static void Hexapod_body_angle_cal(const RC_remote_data_t &remote_data)
 	gait_prg.set_body_rotate_angle(body_angle);
 }
 
-static void Hexapod_mode_select(const RC_remote_data_t &remote_data)
+/*
+ *@brief 检查拨轮数据，符合要求就归零
+ *@param remote_data 遥控数据
+ */
+void Hexapod::body_angle_and_pos_zero(const RC_remote_data_t &remote_data)
+{
+	if(remote_data.thumb_wheel>500)
+	{
+		this->body_angle.zero();
+		this->body_pos.zero();
+	}
+}
+
+void Hexapod::mode_select(const RC_remote_data_t &remote_data)
 {
 	switch(remote_data.S1)
 	{
 		case 1: //拨杆在上面
-			hexapod_mode = HEXAPOD_MOVE;
+			mode = HEXAPOD_MOVE; //移动模式
 			break;
-		case 2:
-			hexapod_mode = HEXAPOD_DANCE;
+		case 2: //拨杆在下面
+			mode = HEXAPOD_BODY_ANGEL_CONTROL; //机身旋转角度控制
 			break;
+		case 3: //拨杆在中间
+			mode = HEXAPOD_BODY_POS_CONTROL;  //机身位置控制
 		default:
 			break;
 	}
 }
 
-static void Hexapod_remote_deal(void)
+static void remote_deal(void)
 {
 	static RC_remote_data_t remote_data;
 	remote_data = Remote_read_data();
-	Hexapod_mode_select(remote_data);
-	switch(hexapod_mode)
-	{
-		case HEXAPOD_MOVE:
-			Hexapod_velocity_cal(remote_data);
-			Hexapod_height_cal(remote_data);
-			body_angle.zero();
-			gait_prg.set_body_rotate_angle(body_angle);
-			break;
-		case HEXAPOD_DANCE:
-			Hexapod_body_angle_cal(remote_data);
-			break;
-		default:
-			break;
-	}
-
+	hexapod.mode_select(remote_data);
+	hexapod.velocity_cal(remote_data);
+	hexapod.body_angle_cal(remote_data);
+	hexapod.body_position_cal(remote_data);
+	hexapod.body_angle_and_pos_zero(remote_data);
 }
 
 
@@ -160,7 +176,7 @@ static void Hexapod_remote_deal(void)
  * @brief 让机器人动起来
  * @param round_time 回合时间，单位ms
  */
-static void Hexapod_move(uint32_t round_time)
+void Hexapod::move(uint32_t round_time)
 {
 	// 设置腿1-6的角度
 	for (int i = 0; i < 6; i++)
@@ -177,11 +193,12 @@ static void Hexapod_move(uint32_t round_time)
 		legs[4].set_thetas(theta_temp); // 设置机械腿角度
 	}
 
-
-	legs[0].move_UART();
+	legs[0].move_DMA();
 	legs[1].move_DMA();
 	legs[2].move_DMA();
 	legs[3].move_DMA();
 	legs[4].move_DMA();
 	legs[5].move_DMA();
 }
+
+
