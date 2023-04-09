@@ -4,3 +4,5 @@
 2. 注释掉MPU_Config
 3. 不要修改和qspi有关的任何参数
 4. HCLK3必须维持在120MHz
+
+核心代码路径MDK-ARM/USER,机器人运动解算在gait_prg.cpp和gait_prg.h中
