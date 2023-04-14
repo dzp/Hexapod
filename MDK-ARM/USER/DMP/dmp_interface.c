@@ -1,11 +1,13 @@
 #include "dmp_interface.h"
 #include "i2c.h"
-
+#include "main.h"
 
 
 void my_get_ms(unsigned long *tick)
 {
-    *tick = xTaskGetTickCount();
+    if(!tick)
+        return;
+    *tick = xTaskGetTickCount();	
 }
 
 void my_delay_ms(uint32_t ms)

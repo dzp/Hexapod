@@ -120,7 +120,7 @@ void MX_FREERTOS_Init(void) {
   LegControl_taskHandle = osThreadCreate(osThread(LegControl_task), NULL);
 
   /* definition and creation of MPU_task */
-  osThreadDef(MPU_task, MPU_Task, osPriorityIdle, 0, 256);
+  osThreadDef(MPU_task, MPU_Task, osPriorityRealtime, 0, 512);
   MPU_taskHandle = osThreadCreate(osThread(MPU_task), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */

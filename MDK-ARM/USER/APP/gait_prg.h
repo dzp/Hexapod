@@ -12,14 +12,14 @@
 #define CHASSIS_WIDTH 161.5f      // 底盘宽度（x轴方向）
 #define CHASSIS_FRONT_WIDTH 93.3f // 底盘前端宽度（x轴方向）
 
-#define N_POINTS 40                       // 点的数量（必须是偶数）
+#define N_POINTS 200                       // 点的数量（必须是偶数）
 #define THETA_STAND_2 40.0f / 180.0f * PI // 机械腿站立时最后两个关节的角度
 #define THETA_STAND_3 -110.0f / 180.0f * PI
 
 #define K_CEN 500.0f     // 用于确定圆心模长的系数
 #define KR_1 1           //%用于计算步伐大小的系数
-#define KR_2 1           //%用于计算步伐大小的系数
-#define MAX_R_PACE 75.0f // 最大步伐半径
+#define KR_2 0.6f           //%用于计算步伐大小的系数
+#define MAX_R_PACE 65.0f // 最大步伐半径
 #define MAX_SPEED 0.2f * 660
 
 #define MIN_Z_PACE 15.0f

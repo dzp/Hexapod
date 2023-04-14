@@ -23,6 +23,16 @@
 #define HEXAPOD_MAX_Y_ROTATE 10.0f / 180 * PI  // 绕X轴旋转角度最大为 10度
 #define HEXAPOD_MIN_Z_ROTATE -25.0f / 180 * PI // 绕X轴旋转角度最小为-25度
 #define HEXAPOD_MAX_Z_ROTATE 25.0f / 180 * PI  // 绕X轴旋转角度最大为 25度
+
+/*PID*/
+#define MPU_PID_KP 0.02f
+#define MPU_PID_KI 0.001f
+#define MPU_PID_KD 0.3f
+
+#define ROTATE_BODY_ANGLE_SENSI 0.00002f//控制角度灵敏度
+#define ROTATE_BODY_POS_SENSI 0.006f//控制位置灵敏度
+
+
 typedef enum
 {
     HEXAPOD_MOVE,
@@ -30,14 +40,28 @@ typedef enum
     HEXAPOD_BODY_POS_CONTROL,
 } Hexapod_mode_e;
 
+typedef enum
+{
+    MPU_ON,
+    MPU_OFF,
+}MPU_SW_e;
+
+
+
 class Hexapod
 {
 public:
     Leg legs[6];                 // 六条腿
     Velocity velocity;           // 机器人速度
     Hexapod_mode_e mode; // 机器人模式
+    MPU_SW_e mpu_sw;    //是否由陀螺仪控制
     Position3 body_pos;
     Position3 body_angle;
+    Position3 mpu_angle;
+    Position3 mpu_angle_set;
+    PID mpu_pid_x; //x轴pid
+    PID mpu_pid_y; //y轴pid
+    bool mpu_flag;
     void Init();          
     void velocity_cal(const RC_remote_data_t &remote_data);
     void body_position_cal(const RC_remote_data_t &remote_data);
@@ -45,6 +69,8 @@ public:
     void mode_select(const RC_remote_data_t &remote_data);
     void body_angle_and_pos_zero(const RC_remote_data_t &remote_data);
     void move(uint32_t round_time);
+
 };
+
 
 #endif

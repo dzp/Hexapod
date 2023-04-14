@@ -146,7 +146,7 @@ public:
      void Init(); //初始化
      void Read_Gyro(); //读取角度（给中断用）
 	 Position3 get_angle(); //读取角度（给用户使用）
-     void MPU_6050::dmp_get_data(); //读取dmp数据
+     void dmp_get_data(); //读取dmp数据
 };
 
 

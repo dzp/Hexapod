@@ -27,7 +27,7 @@ extern "C"{
 
 /*USER CODE BEGIN*/
 #include "main.h"
-#define DEFAULT_MPU_HZ  (100)           /* 定义采样速率 */
+#define DEFAULT_MPU_HZ  (200)           /* 定义采样速率 */
 #define q30             (1073741824.0f) /* 2^30 = 1073741824 */
 
 #define MPU6050                         /* 定义为使用的传感器MPU6050 */

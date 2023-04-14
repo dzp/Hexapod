@@ -40,6 +40,30 @@ public:
 Position3 operator+(const Position3& pos1,const Position3& pos2);
 Position3 operator-(const Position3& pos1,const Position3& pos2);
 
+typedef enum
+{
+    CIR_ON,
+    CIR_OFF,
+}Cir_mode;
+
+
+class PID
+{
+private:
+    float kp,ki,kd;
+    float pout,iout,dout,out;
+    float Derror[3];  //微分项 0最新 1上一次 2上上次
+	float error[3]; //误差项 0最新 1上一次 2上上次
+    float current_val;
+    float set_val;
+    Cir_mode cir_mode;
+public:
+    PID(float kp,float ki, float kd,Cir_mode cir_mode);
+    PID(){}; //空构造
+    float cal(float current_val, float set_val);
+    void Init(float kp,float ki, float kd,Cir_mode cir_mode);
+};
+
 void value_limit(float &val,float min,float max);
 
 

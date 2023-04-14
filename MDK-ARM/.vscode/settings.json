@@ -47,6 +47,7 @@
         "string.h": "c",
         "dmpkey.h": "c",
         "dmpmap.h": "c",
-        "inv_mpu_dmp_motion_driver.h": "c"
+        "inv_mpu_dmp_motion_driver.h": "c",
+        "cmsis_os.h": "c"
     }
 }

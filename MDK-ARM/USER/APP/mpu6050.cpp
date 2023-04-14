@@ -1,5 +1,6 @@
 #include "mpu6050.h"
 #include "inv_mpu.h"
+#include "my_math.h"
 
 MPU_6050 mpu6050;
 
@@ -7,11 +8,11 @@ void MPU_6050::Init()
 {
     MX_I2C4_Init();
     this->hi2c = &hi2c4;
-    this->I2C_Write(MPU6050_RA_PWR_MGMT_1, 0x00); // 解除休眠状态
-    this->set_gyro_sampling_fre(200);             // 设置陀螺仪采样率
-    this->I2C_Write(MPU6050_RA_CONFIG, 0x06);
-    this->I2C_Write(MPU6050_RA_ACCEL_CONFIG, 0x01); // 配置加速度传感器工作在4G模式
-    this->I2C_Write(MPU6050_RA_GYRO_CONFIG, 0x18);  // 陀螺仪自检及测量范围，典型值：0x18(不自检，2000deg/s)
+    // this->I2C_Write(MPU6050_RA_PWR_MGMT_1, 0x00); // 解除休眠状态
+    // this->set_gyro_sampling_fre(200);             // 设置陀螺仪采样率
+    // this->I2C_Write(MPU6050_RA_CONFIG, 0x06);
+    // this->I2C_Write(MPU6050_RA_ACCEL_CONFIG, 0x01); // 配置加速度传感器工作在4G模式
+    // this->I2C_Write(MPU6050_RA_GYRO_CONFIG, 0x18);  // 陀螺仪自检及测量范围，典型值：0x18(不自检，2000deg/s)
     atk_ms6050_dmp_init();                          // 初始化dmp
 }
 
@@ -53,7 +54,8 @@ void MPU_6050::Read_Gyro()
 
 Position3 MPU_6050::get_angle()
 {
-    return this->angle;
+		Position3 angle_rad(this->angle.x/180*PI, this->angle.y/180*PI,this->angle.z/180*PI); //转换为弧度制
+    return angle_rad;
 }
 
 /*
@@ -73,5 +75,5 @@ void MPU_6050::set_gyro_sampling_fre(uint32_t fre)
 
 void MPU_6050::dmp_get_data()
 {
-    atk_ms6050_dmp_get_data(&(this->angle.x), &(this->angle.y), &(this->angle.z));
+    atk_ms6050_dmp_get_data(&(this->angle.x), &(this->angle.y), &(this->angle.z));  //换算为弧度制
 }

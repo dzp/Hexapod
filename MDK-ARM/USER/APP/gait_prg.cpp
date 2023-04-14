@@ -7,7 +7,7 @@
 using namespace std;
 
 // 全局变量
-Position3 Point_detect[6][20];
+//Position3 Point_detect[6][20];
 
 extern uint32_t LegControl_round; // 控制回合
 
@@ -141,10 +141,12 @@ void Gait_prg::CEN_and_pace_cal(Velocity velocity)
 		else
 			CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
     // 计算步伐大小
-    float module_speed = sqrt(pow(velocity.Vx, 2) + pow(velocity.Vy, 2));
+    //float module_speed = sqrt(pow(velocity.Vx, 2) + pow(velocity.Vy, 2));
+    float module_speed = pow(pow(velocity.Vx, 3) + pow(velocity.Vy, 3)+pow(velocity.omega, 3),1.0f/3);
     if(module_speed > MAX_SPEED)
         module_speed = MAX_SPEED; //限制速度
-    R_pace = KR_1 * abs(velocity.omega) + KR_2 * module_speed;
+    //R_pace = KR_1 * abs(velocity.omega) + KR_2 * module_speed;
+    R_pace = KR_2 * module_speed;
     // 计算步伐时间
     if (R_pace > MAX_R_PACE)
         this->pace_time = 1000 / (R_pace / MAX_R_PACE); // 若超过最大步伐大小则缩小步伐时间
@@ -212,7 +214,7 @@ void Gait_prg::gait_proggraming()
                 point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
         }
         point = hexapod_rotate(point,i);
-        Point_detect[i][LegControl_round] = point;
+        //Point_detect[i][LegControl_round] = point;
         actions[i].thetas[LegControl_round] = ikine(point);
     }
 
@@ -239,7 +241,7 @@ void Gait_prg::gait_proggraming()
             point.z = Pws[i].z;
         }
         point = hexapod_rotate(point,i);
-        Point_detect[i][LegControl_round] = point;
+        //Point_detect[i][LegControl_round] = point;
         actions[i].thetas[LegControl_round] = ikine(point);
     }
 }
