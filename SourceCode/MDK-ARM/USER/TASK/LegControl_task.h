@@ -25,9 +25,20 @@
 #define HEXAPOD_MAX_Z_ROTATE 25.0f / 180 * PI  // 绕X轴旋转角度最大为 25度
 
 /*PID*/
-#define MPU_PID_KP 0.02f
-#define MPU_PID_KI 0.001f
-#define MPU_PID_KD 0.3f
+#define MPU_X_PID_KP 0.015f
+#define MPU_X_PID_KI 0.0f
+#define MPU_X_PID_KD 0.5f
+
+#define MPU_Y_PID_KP 0.015f
+#define MPU_Y_PID_KI 0.0f
+#define MPU_Y_PID_KD 0.5f
+
+
+/*FOF一阶低通滤波参数*/
+#define VELOCITY_FOF_K 0.2f
+#define BODY_POS_FOF_K 0.2f
+#define BODY_ANGLE_FOF_K 0.2f
+
 
 #define ROTATE_BODY_ANGLE_SENSI 0.00002f//控制角度灵敏度
 #define ROTATE_BODY_POS_SENSI 0.006f//控制位置灵敏度
@@ -55,12 +66,15 @@ public:
     Velocity velocity;           // 机器人速度
     Hexapod_mode_e mode; // 机器人模式
     MPU_SW_e mpu_sw;    //是否由陀螺仪控制
-    Position3 body_pos;
-    Position3 body_angle;
+    Position3 body_pos;     //机体位置
+    Position3 body_angle;   //机体角度
     Position3 mpu_angle;
     Position3 mpu_angle_set;
     PID mpu_pid_x; //x轴pid
     PID mpu_pid_y; //y轴pid
+    First_order_filter velocity_fof[3];
+    First_order_filter body_pos_fof;
+    First_order_filter body_angle_fof;
     bool mpu_flag;
     void Init();          
     void velocity_cal(const RC_remote_data_t &remote_data);

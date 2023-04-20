@@ -82,28 +82,45 @@ void Hexapod::Init(void)
 	leg_offset[3] = Thetas(3 * PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 	leg_offset[4] = Thetas(PI, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 	leg_offset[5] = Thetas(-3 * PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
-	mpu_pid_x.Init(MPU_PID_KP,MPU_PID_KI,MPU_PID_KD,CIR_OFF);
-	mpu_pid_y.Init(MPU_PID_KP,MPU_PID_KI,MPU_PID_KD,CIR_OFF);
+	mpu_pid_x.Init(MPU_X_PID_KP, MPU_X_PID_KI, MPU_X_PID_KD, CIR_OFF);
+	mpu_pid_y.Init(MPU_Y_PID_KP, MPU_Y_PID_KI, MPU_Y_PID_KD, CIR_OFF);
+	velocity_fof[0].set_k_filter(VELOCITY_FOF_K);
+	velocity_fof[1].set_k_filter(VELOCITY_FOF_K);
+	velocity_fof[2].set_k_filter(VELOCITY_FOF_K);
+	body_pos_fof.set_k_filter(BODY_POS_FOF_K);
+	body_angle_fof.set_k_filter(BODY_ANGLE_FOF_K);
 }
 
 // 计算机器人速度
 void Hexapod::velocity_cal(const RC_remote_data_t &remote_data)
 {
-	if (this->mode != HEXAPOD_MOVE) // 若不是行走模式则直接返回，不计算速度
-		return;
-	velocity.Vx = 0.2 * remote_data.right_HRZC;
-	velocity.Vy = 0.2 * remote_data.right_VETC;
-	velocity.omega = -0.3 * remote_data.left_HRZC;
+	if (this->mode != HEXAPOD_MOVE) // 若不是行走模式则速度为0
+	{
+		velocity.Vx = 0;
+		velocity.Vy = 0;
+		velocity.omega = 0;
+	}
+	else
+	{
+		//velocity.Vx = 0.2 * remote_data.right_HRZC;
+		velocity.Vx = velocity_fof[0].cal(0.3 * remote_data.right_HRZC);
+		//velocity.Vy = 0.2 * remote_data.right_VETC;
+		velocity.Vy = velocity_fof[1].cal(0.3 * remote_data.right_VETC);
+		//velocity.omega = -0.3 * remote_data.left_HRZC;
+		velocity.omega = velocity_fof[2].cal(-0.3 * remote_data.left_HRZC);
+	}
 }
 
 void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
 {
 	if (this->mode != HEXAPOD_BODY_ANGEL_CONTROL) // 除了姿态控制模式，其他情况下都能控制z轴高度
-		body_pos.z += 0.03 * remote_data.left_VETC;
+		body_pos.z += ROTATE_BODY_POS_SENSI * remote_data.left_VETC;
 	if (this->mode == HEXAPOD_BODY_POS_CONTROL) // 若是身体位置控制模式则计算xy位置
 	{
-		body_pos.y += ROTATE_BODY_POS_SENSI * remote_data.right_VETC;
-		body_pos.x += ROTATE_BODY_POS_SENSI * remote_data.right_HRZC;
+		// body_pos.y += ROTATE_BODY_POS_SENSI * remote_data.right_VETC;
+		// body_pos.x += ROTATE_BODY_POS_SENSI * remote_data.right_HRZC;
+		body_pos.y = HEXAPOD_MAX_Y/660.0f * remote_data.right_VETC;
+		body_pos.x = HEXAPOD_MIN_X/660.0f * remote_data.right_HRZC;
 	}
 
 	value_limit(body_pos.z, HEXAPOD_MIN_HEIGHT, HEXAPOD_MAX_HEIGHT);
@@ -114,23 +131,30 @@ void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
 
 void Hexapod::body_angle_cal(const RC_remote_data_t &remote_data)
 {
-	mpu_angle = mpu6050.get_angle();  //获取陀螺仪角度
+	mpu_angle = mpu6050.get_angle();			  // 获取陀螺仪角度
 	if (this->mode != HEXAPOD_BODY_ANGEL_CONTROL) // 若不是姿态控制模式则直接返回
 		return;
-	if (this->mpu_flag == false && this->mpu_sw == MPU_ON) //第一次进入陀螺仪模式
+	if (this->mpu_flag == false && this->mpu_sw == MPU_ON) // 第一次进入陀螺仪模式
 	{
-		this->mpu_angle_set = this->mpu_angle;  //将设定角度等于陀螺仪角度
-		this->mpu_flag = true;  //标志位置1
+		this->mpu_angle_set = this->mpu_angle; // 将设定角度等于陀螺仪角度
+		this->mpu_flag = true;				   // 标志位置1
 	}
-	if(this->mpu_sw == MPU_OFF) //不是陀螺仪模式则标志位置零
+	if (this->mpu_sw == MPU_OFF) // 不是陀螺仪模式则标志位置零
 		this->mpu_flag = false;
 	if (this->mpu_sw == MPU_ON)
 	{
 		mpu_angle_set.x -= ROTATE_BODY_ANGLE_SENSI * remote_data.left_VETC;
 		mpu_angle_set.y += ROTATE_BODY_ANGLE_SENSI * remote_data.left_HRZC;
-		body_angle.x += this->mpu_pid_x.cal(mpu_angle.x,mpu_angle_set.x);
-		body_angle.y -= this->mpu_pid_y.cal(mpu_angle.y,mpu_angle_set.y);
-		//body_angle.z += (mpu_angle_set.z - mpu_angle.z); //陀螺仪z轴零漂严重，暂时不使用
+		//mpu_angle_set.z += ROTATE_BODY_ANGLE_SENSI * remote_data.right_HRZC;
+		// body_angle.x = this->mpu_angle.x;
+		// body_angle.y = this->mpu_angle.y;
+		// float mpu_x_add = mpu_angle_set.x - mpu_angle.x;
+		// float mpu_y_add = mpu_angle_set.y - mpu_angle.y;
+		body_angle.x += this->mpu_pid_x.cal(mpu_angle.x, mpu_angle_set.x);
+		body_angle.y -= this->mpu_pid_y.cal(mpu_angle.y, mpu_angle_set.y);
+		// body_angle.x = this->mpu_angle.x + this->mpu_pid_x.cal(mpu_angle.x, mpu_angle_set.x);
+		// body_angle.y = this->mpu_angle.y - this->mpu_pid_y.cal(mpu_angle.y, mpu_angle_set.y);
+		// body_angle.z += (mpu_angle_set.z - mpu_angle.z); //陀螺仪z轴零漂严重，暂时不使用
 	}
 	else
 	{
@@ -198,31 +222,44 @@ static void remote_deal(void)
 	hexapod.body_angle_and_pos_zero(remote_data);
 }
 
+
 /*
  * @brief 让机器人动起来
  * @param round_time 回合时间，单位ms
  */
 void Hexapod::move(uint32_t round_time)
 {
-	// 设置腿1-6的角度
-	for (int i = 0; i < 6; i++)
+	// // 设置腿1-6的角度
+	// for (int i = 0; i < 6; i++)
+	// {
+	// 	legs[i].set_thetas((gait_prg.actions[i].thetas[LegControl_round]) - leg_offset[i]); // 设置机械腿角度
+	// 	legs[i].set_time(round_time);														// 设置机械腿移动时间
+	// }
+	// // 设置腿5的角度
+	// if (gait_prg.actions[4].thetas[LegControl_round].angle[0] <= 0)
+	// {
+	// 	Thetas theta_temp;
+	// 	theta_temp = (gait_prg.actions[4].thetas[LegControl_round]) - leg_offset[4];
+	// 	theta_temp.angle[0] += 2 * PI;
+	// 	legs[4].set_thetas(theta_temp); // 设置机械腿角度
+	// }
+	Thetas theta_temp;
+	for (int i = 0; i < 6;i++)
 	{
-		legs[i].set_thetas((gait_prg.actions[i].thetas[LegControl_round]) - leg_offset[i]); // 设置机械腿角度
-		legs[i].set_time(round_time);														// 设置机械腿移动时间
-	}
-	// 设置腿5的角度
-	if (gait_prg.actions[4].thetas[LegControl_round].angle[0] <= 0)
-	{
-		Thetas theta_temp;
-		theta_temp = (gait_prg.actions[4].thetas[LegControl_round]) - leg_offset[4];
-		theta_temp.angle[0] += 2 * PI;
-		legs[4].set_thetas(theta_temp); // 设置机械腿角度
+		theta_temp = (gait_prg.actions[i].thetas[LegControl_round]) - leg_offset[i];
+		if(gait_prg.actions[i].thetas[LegControl_round].angle[0] <= 0)
+		{
+			theta_temp.angle[0] += 2 * PI;
+		}
+		legs[i].set_thetas(theta_temp); // 设置机械腿角度
+		legs[i].set_time(round_time);
+		legs[i].move_DMA();
 	}
 
-	legs[0].move_DMA();
-	legs[1].move_DMA();
-	legs[2].move_DMA();
-	legs[3].move_DMA();
-	legs[4].move_DMA();
-	legs[5].move_DMA();
+	// legs[0].move_DMA();
+	// legs[1].move_DMA();
+	// legs[2].move_DMA();
+	// legs[3].move_DMA();
+	// legs[4].move_DMA();
+	// legs[5].move_DMA();
 }

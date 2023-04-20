@@ -12,17 +12,22 @@
 #define CHASSIS_WIDTH 161.5f      // 底盘宽度（x轴方向）
 #define CHASSIS_FRONT_WIDTH 93.3f // 底盘前端宽度（x轴方向）
 
-#define N_POINTS 200                       // 点的数量（必须是偶数）
+#define N_POINTS 100                      // 点的数量（必须是偶数）
 #define THETA_STAND_2 40.0f / 180.0f * PI // 机械腿站立时最后两个关节的角度
 #define THETA_STAND_3 -110.0f / 180.0f * PI
 
 #define K_CEN 500.0f     // 用于确定圆心模长的系数
 #define KR_1 1           //%用于计算步伐大小的系数
-#define KR_2 0.6f           //%用于计算步伐大小的系数
-#define MAX_R_PACE 65.0f // 最大步伐半径
-#define MAX_SPEED 0.2f * 660
+#define KR_2 1.0f        //%用于计算步伐大小的系数
+#define MAX_R_PACE 60.0f // 最大步伐半径
+#define MAX_SPEED 0.3f * 660
 
 #define MIN_Z_PACE 15.0f
+
+#define MAX_JOINT2_RAD PI / 2.0f          // 第2关节最大弧度
+#define MIN_JOINT2_RAD -0.1f * PI         // 第2关节最小弧度
+#define MAX_JOINT3_RAD -(1.0f / 6.0f) * PI // 第3关节最大弧度
+#define MIN_JOINT3_RAD -(7.0f / 9.0f) * PI // 第3关节最小弧度
 
 class Velocity
 {
@@ -40,14 +45,14 @@ typedef struct
 class Gait_prg
 {
 private:
-    uint32_t pace_time;  // 走一步花费的时间
-    Position3 Pws[6];    // 机械腿末端站立状态下相对于起始端的位置
-    Position3 Pws_default[6]; //默认情况下机械腿末端站立状态下相对于起始端的位置
-    Position3 P_legs[6]; // 各个机械腿起始端相对于机器人中心的坐标
-    Position3 CEN;       // 绕圆心的坐标
-    float R_pace;        // 步伐大小（单位mm）
-    Position3 hexapod_rotate(Position3 &point,uint32_t index);
-    Position3 rotate_angle;  //机体旋转角度
+    uint32_t pace_time;       // 走一步花费的时间
+    Position3 Pws[6];         // 机械腿末端站立状态下相对于起始端的位置
+    Position3 Pws_default[6]; // 默认情况下机械腿末端站立状态下相对于起始端的位置
+    Position3 P_legs[6];      // 各个机械腿起始端相对于机器人中心的坐标
+    Position3 CEN;            // 绕圆心的坐标
+    float R_pace;             // 步伐大小（单位mm）
+    Position3 hexapod_rotate(Position3 &point, uint32_t index);
+    Position3 rotate_angle; // 机体旋转角度
 public:
     action actions[6];
     void Init(); // 初始化

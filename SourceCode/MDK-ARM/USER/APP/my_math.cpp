@@ -113,3 +113,17 @@ void PID::Init(float kp,float ki, float kd,Cir_mode cir_mode)
     this->kd = kd;
     this->cir_mode = cir_mode;
 }
+
+void First_order_filter::set_k_filter(float k_filter)
+{
+    this->k_filter = k_filter;
+}
+
+float First_order_filter::cal(float input)
+{
+    this->out = this->k_filter*input + (1-k_filter)*this->last_input;
+    this->last_input = input;
+    return this->out;
+}
+
+

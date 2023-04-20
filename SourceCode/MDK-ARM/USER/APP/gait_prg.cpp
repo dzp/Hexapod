@@ -7,8 +7,6 @@
 using namespace std;
 
 // 全局变量
-//Position3 Point_detect[6][20];
-
 extern uint32_t LegControl_round; // 控制回合
 
 // 函数
@@ -24,8 +22,8 @@ void Gait_prg::Init()
     Pws[3] = fkine(Thetas(3 * PI / 4, THETA_STAND_2, THETA_STAND_3));
     Pws[4] = fkine(Thetas(PI, THETA_STAND_2, THETA_STAND_3));
     Pws[5] = fkine(Thetas(5 * PI / 4, THETA_STAND_2, THETA_STAND_3));
-    //默认站立坐标，这里copy一份
-    memcpy(Pws_default,Pws,sizeof(Position3)*6);
+    // 默认站立坐标，这里copy一份
+    memcpy(Pws_default, Pws, sizeof(Position3) * 6);
     // 计算各个机械腿起始端相对于机器人中心的坐标
     P_legs[0] = Position3(CHASSIS_FRONT_WIDTH / 2, CHASSIS_LEN / 2, 0);
     P_legs[1] = Position3(CHASSIS_WIDTH / 2, 0, 0);
@@ -34,9 +32,6 @@ void Gait_prg::Init()
     P_legs[4] = Position3(-CHASSIS_WIDTH / 2, 0, 0);
     P_legs[5] = Position3(-CHASSIS_FRONT_WIDTH / 2, -CHASSIS_LEN / 2, 0);
 }
-
-
-
 
 /*
  * 正运动解算
@@ -64,7 +59,8 @@ static Thetas ikine(Position3 &pos)
     alpha1 = acos((pow(LEG_LEN2, 2) + pow(Lr, 2) - pow(LEG_LEN3, 2)) / (2 * Lr * LEG_LEN2));
     alpha2 = acos((pow(Lr, 2) + pow(LEG_LEN3, 2) - pow(LEG_LEN2, 2)) / (2 * Lr * LEG_LEN3));
     Thetas thetas(atan2(pos1.y, pos1.x), alpha1 - alpha_r, -(alpha1 + alpha2));
-
+    value_limit(thetas.angle[1], MIN_JOINT2_RAD, MAX_JOINT2_RAD);
+    value_limit(thetas.angle[2], MIN_JOINT3_RAD, MAX_JOINT3_RAD);
     return thetas;
 }
 
@@ -78,12 +74,12 @@ void Gait_prg::set_body_rotate_angle(Position3 &rotate_angle)
  *@param point 腿末端相对于起始端的坐标，
  *@param index 腿的编号
  */
-Position3 Gait_prg::hexapod_rotate(Position3 &point,uint32_t index)
+Position3 Gait_prg::hexapod_rotate(Position3 &point, uint32_t index)
 {
     Position3 retvel;
-    retvel.x = cos(rotate_angle.y)*cos(rotate_angle.z)*(P_legs[index].x + point.x) - cos(rotate_angle.y)*sin(rotate_angle.z)*(P_legs[index].y + point.y);
-    retvel.y = (cos(rotate_angle.x)*sin(rotate_angle.z) + cos(rotate_angle.z)*sin(rotate_angle.x)*sin(rotate_angle.y))*(P_legs[index].x + point.x) + (cos(rotate_angle.x)*cos(rotate_angle.z) - sin(rotate_angle.x)*sin(rotate_angle.y)*sin(rotate_angle.z))*(P_legs[index].y + point.y);
-    retvel.z =  point.z + (sin(rotate_angle.x)*sin(rotate_angle.z) - cos(rotate_angle.x)*cos(rotate_angle.z)*sin(rotate_angle.y))*(P_legs[index].x + point.x) + (cos(rotate_angle.z)*sin(rotate_angle.x) + cos(rotate_angle.x)*sin(rotate_angle.y)*sin(rotate_angle.z))*(P_legs[index].y + point.y);
+    retvel.x = cos(rotate_angle.y) * cos(rotate_angle.z) * (P_legs[index].x + point.x) - cos(rotate_angle.y) * sin(rotate_angle.z) * (P_legs[index].y + point.y);
+    retvel.y = (cos(rotate_angle.x) * sin(rotate_angle.z) + cos(rotate_angle.z) * sin(rotate_angle.x) * sin(rotate_angle.y)) * (P_legs[index].x + point.x) + (cos(rotate_angle.x) * cos(rotate_angle.z) - sin(rotate_angle.x) * sin(rotate_angle.y) * sin(rotate_angle.z)) * (P_legs[index].y + point.y);
+    retvel.z = point.z + (sin(rotate_angle.x) * sin(rotate_angle.z) - cos(rotate_angle.x) * cos(rotate_angle.z) * sin(rotate_angle.y)) * (P_legs[index].x + point.x) + (cos(rotate_angle.z) * sin(rotate_angle.x) + cos(rotate_angle.x) * sin(rotate_angle.y) * sin(rotate_angle.z)) * (P_legs[index].y + point.y);
     retvel = retvel - P_legs[index];
     return retvel;
 }
@@ -94,7 +90,7 @@ Position3 Gait_prg::hexapod_rotate(Position3 &point,uint32_t index)
  */
 void Gait_prg::set_height(float height)
 {
-    for(int i=0;i<6;i++)
+    for (int i = 0; i < 6; i++)
     {
         Pws[i].z = Pws_default[i].z + height;
     }
@@ -106,7 +102,7 @@ void Gait_prg::set_height(float height)
  */
 void Gait_prg::set_body_position(Position3 &pos)
 {
-    for (int i = 0; i < 6;i++)
+    for (int i = 0; i < 6; i++)
     {
         Pws[i] = Pws_default[i] - pos;
     }
@@ -125,27 +121,25 @@ void Gait_prg::CEN_and_pace_cal(Velocity velocity)
     if (velocity.omega == 0)
         velocity.omega += 0.001f;
 
-    if(velocity.omega<0)
-	{
-		velocity.Vx = -velocity.Vx;
-		velocity.Vy = -velocity.Vy;
-	}
+    if (velocity.omega < 0)
+    {
+        velocity.Vx = -velocity.Vx;
+        velocity.Vy = -velocity.Vy;
+    }
 
     // 计算圆心模长
     float module_CEN = K_CEN / velocity.omega * sqrt(pow(velocity.Vx, 2) + pow(velocity.Vy, 2));
-		Velocity velocity_s;  //旋转90度
-		velocity_s.Vx = -velocity.Vy;
-		velocity_s.Vy = velocity.Vx;
-		if (velocity_s.Vx>=0)
-			CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
-		else
-			CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+    Velocity velocity_s; // 旋转90度
+    velocity_s.Vx = -velocity.Vy;
+    velocity_s.Vy = velocity.Vx;
+    if (velocity_s.Vx >= 0)
+        CEN.x = sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
+    else
+        CEN.x = -sqrt(pow(module_CEN, 2) / (1 + pow(velocity.Vx, 2) / pow(velocity.Vy, 2)));
     // 计算步伐大小
-    //float module_speed = sqrt(pow(velocity.Vx, 2) + pow(velocity.Vy, 2));
-    float module_speed = pow(pow(velocity.Vx, 3) + pow(velocity.Vy, 3)+pow(velocity.omega, 3),1.0f/3);
-    if(module_speed > MAX_SPEED)
-        module_speed = MAX_SPEED; //限制速度
-    //R_pace = KR_1 * abs(velocity.omega) + KR_2 * module_speed;
+    float module_speed = pow(pow(velocity.Vx, 3) + pow(velocity.Vy, 3) + pow(velocity.omega, 3), 1.0f / 3);
+    if (module_speed > MAX_SPEED)
+        module_speed = MAX_SPEED; // 限制速度
     R_pace = KR_2 * module_speed;
     // 计算步伐时间
     if (R_pace > MAX_R_PACE)
@@ -208,13 +202,12 @@ void Gait_prg::gait_proggraming()
             point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);                 // 计算这个点的y轴坐标(相对于机械腿起始端)
             y_temp = -R_pace + (LegControl_round - N_POINTS / 2) * (R_pace * 4 / N_POINTS);
             // 根据圆的大小缩小z轴高度,并迁移坐标系到机械腿末端,因为站立时z轴都是一样的，所以随便用一个Pw就行
-            if(R_pace>0.5f&&R_pace<MIN_Z_PACE)
-                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i]*3 + Pws[i].z;    
+            if (R_pace > 0.5f && R_pace < MIN_Z_PACE)
+                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] * 3 + Pws[i].z;
             else
                 point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
         }
-        point = hexapod_rotate(point,i);
-        //Point_detect[i][LegControl_round] = point;
+        point = hexapod_rotate(point, i);
         actions[i].thetas[LegControl_round] = ikine(point);
     }
 
@@ -228,8 +221,8 @@ void Gait_prg::gait_proggraming()
             point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t); // 计算这个点的y轴坐标(相对于机械腿起始端)
             y_temp = -R_pace + LegControl_round * (R_pace * 4 / N_POINTS);
             // 根据圆的大小缩小z轴高度,并迁移坐标系到机械腿末端,因为站立时z轴都是一样的，所以随便用一个Pw就行
-            if(R_pace>0.5f&&R_pace<MIN_Z_PACE)
-                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] *3+ Pws[i].z;
+            if (R_pace > 0.5f && R_pace < MIN_Z_PACE)
+                point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] * 3 + Pws[i].z;
             else
                 point.z = sqrt(pow(R_pace, 2) - pow(y_temp, 2)) * Rp_ratios[i] + Pws[i].z;
         }
@@ -240,8 +233,7 @@ void Gait_prg::gait_proggraming()
             point.y = Vec_Leg_Start2CEN_s[i].y + norm_CEN2legs[i] * sin(angle_t);                 // 计算这个点的y轴坐标(相对于机械腿起始端)
             point.z = Pws[i].z;
         }
-        point = hexapod_rotate(point,i);
-        //Point_detect[i][LegControl_round] = point;
+        point = hexapod_rotate(point, i);
         actions[i].thetas[LegControl_round] = ikine(point);
     }
 }
