@@ -35,9 +35,9 @@
 
 
 /*FOF一阶低通滤波参数*/
-#define VELOCITY_FOF_K 0.2f
-#define BODY_POS_FOF_K 0.2f
-#define BODY_ANGLE_FOF_K 0.2f
+#define VELOCITY_FOF_K 0.06f
+#define BODY_POS_FOF_K 0.1f
+#define BODY_ANGLE_FOF_K 0.1f
 
 
 #define ROTATE_BODY_ANGLE_SENSI 0.00002f//控制角度灵敏度
@@ -73,8 +73,8 @@ public:
     PID mpu_pid_x; //x轴pid
     PID mpu_pid_y; //y轴pid
     First_order_filter velocity_fof[3];
-    First_order_filter body_pos_fof;
-    First_order_filter body_angle_fof;
+    First_order_filter body_pos_fof[3];
+    First_order_filter body_angle_fof[3];
     bool mpu_flag;
     void Init();          
     void velocity_cal(const RC_remote_data_t &remote_data);

@@ -7,12 +7,12 @@ extern "C"
   void MPU_Task(void const *argument)
   {
     osDelay(100);
-    mpu6050.Init();
+    //mpu6050.Init();
     osDelay(8000); //µÈ´ýÍÓÂÝÒÇ³õÊ¼»¯
     while (1)
     {
-      mpu6050.dmp_get_data();
-      osDelay(5);
+      //mpu6050.dmp_get_data();
+      osDelay(10);
     }
   }
 }

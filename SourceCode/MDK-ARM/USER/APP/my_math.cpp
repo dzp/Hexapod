@@ -76,37 +76,37 @@ PID::PID(float kp, float ki, float kd, Cir_mode cicir_moder)
 
 float PID::cal(float current_val, float set_val)
 {
-    this->error[2]=this->error[1];
-    this->error[1]=this->error[0];
+    this->error[2] = this->error[1];
+    this->error[1] = this->error[0];
     this->current_val = current_val;
     this->set_val = set_val;
     this->error[0] = set_val - current_val;
 
-    switch(this->cir_mode)
+    switch (this->cir_mode)
     {
-        case CIR_OFF:
-            break;
-        case CIR_ON:
-            if(this->error[0]>PI/2)
-                this->error[0] -= PI;
-            else if(this->error[0]< - PI/2)
-                this->error[0] += PI;
-            break;
-        default:
-            break;
+    case CIR_OFF:
+        break;
+    case CIR_ON:
+        if (this->error[0] > PI / 2)
+            this->error[0] -= PI;
+        else if (this->error[0] < -PI / 2)
+            this->error[0] += PI;
+        break;
+    default:
+        break;
     }
-    this->pout = this->kp*this->error[0]; //比例项计算
-    this->iout = this->ki*this->error[0]; //积分项计算
-    //微分项计算
-	this->Derror[2] = this->Derror[1];
-	this->Derror[1] = this->Derror[0];
-	this->Derror[0] = (this->error[0] - this->error[1]);
-	this->dout = this->kd * this->Derror[0];
+    this->pout = this->kp * this->error[0]; // 比例项计算
+    this->iout = this->ki * this->error[0]; // 积分项计算
+    // 微分项计算
+    this->Derror[2] = this->Derror[1];
+    this->Derror[1] = this->Derror[0];
+    this->Derror[0] = (this->error[0] - this->error[1]);
+    this->dout = this->kd * this->Derror[0];
     this->out = this->pout + this->iout + this->dout;
     return this->out;
 }
 
-void PID::Init(float kp,float ki, float kd,Cir_mode cir_mode)
+void PID::Init(float kp, float ki, float kd, Cir_mode cir_mode)
 {
     this->kp = kp;
     this->ki = ki;
@@ -121,9 +121,44 @@ void First_order_filter::set_k_filter(float k_filter)
 
 float First_order_filter::cal(float input)
 {
-    this->out = this->k_filter*input + (1-k_filter)*this->last_input;
-    this->last_input = input;
+    this->out = this->k_filter * input + (1 - k_filter) * this->last_input;
+    this->last_input = this->out;
     return this->out;
 }
 
+void Diff_Limit::set_diff(float diff)
+{
+    this->diff = diff;
+}
 
+void Diff_Limit::set_fre(uint32_t fre)
+{
+    this->fre = fre;
+}
+
+float Diff_Limit::cal(float goal_value)
+{
+    float temp;
+    this->goal_value = goal_value;
+    if (goal_value > current_value)
+    {
+        temp = current_value + diff / fre;
+        if(temp>goal_value)
+        {
+            current_value = goal_value;
+            return current_value;
+        }
+        else current_value = temp;
+    }
+    else
+    {
+        temp = current_value - diff / fre;
+        if(temp<goal_value)
+        {
+            current_value = goal_value;
+            return current_value;
+        }
+        else current_value=temp;
+    }
+    return temp;
+}

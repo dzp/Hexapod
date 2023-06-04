@@ -29,6 +29,8 @@
 #define MAX_JOINT3_RAD -(1.0f / 6.0f) * PI // 第3关节最大弧度
 #define MIN_JOINT3_RAD -(7.0f / 9.0f) * PI // 第3关节最小弧度
 
+#define K_W (1.0f/56.56854f) // 1/|B|_max
+
 class Velocity
 {
 public:
@@ -51,17 +53,21 @@ private:
     Position3 P_legs[6];      // 各个机械腿起始端相对于机器人中心的坐标
     Position3 CEN;            // 绕圆心的坐标
     float R_pace;             // 步伐大小（单位mm）
+    Position3 body_pos;       //机身位置
+    Velocity velocity;       //机身速度
     Position3 hexapod_rotate(Position3 &point, uint32_t index);
     Position3 rotate_angle; // 机体旋转角度
+    float move_point();
 public:
     action actions[6];
     void Init(); // 初始化
-    void CEN_and_pace_cal(Velocity velocity);
+    void CEN_and_pace_cal();
     void gait_proggraming();
     uint32_t get_pace_time();
     void set_height(float height);
     void set_body_rotate_angle(Position3 &rotate_angle);
-    void set_body_position(Position3 &pos);
+    void set_body_position(Position3 &body_pos);
+    void set_velocity(Velocity &velocity);
 };
 
 #endif

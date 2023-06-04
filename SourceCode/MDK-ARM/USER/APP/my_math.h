@@ -3,6 +3,8 @@
 
 #define PI 3.14159f // 圆周率
 
+#include "main.h"
+
 class Thetas
 {
 public:
@@ -71,6 +73,20 @@ public:
     First_order_filter(float k_filter = 1) { this->k_filter = k_filter; };
     float cal(float input);
     void set_k_filter(float k_filter);
+};
+
+class Diff_Limit
+{
+private:
+    float goal_value; //目标值
+    float current_value; //当前值
+    float diff; //导数
+    uint32_t fre; //计算频率（Hz）
+public:
+    Diff_Limit(float diff=1,uint32_t fre=100){this->diff = diff; this->fre = fre;};
+    void set_diff(float diff);
+    void set_fre(uint32_t fre);
+    float cal(float goal_value);
 };
 
 void value_limit(float &val, float min, float max);

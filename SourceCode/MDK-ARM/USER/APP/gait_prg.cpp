@@ -64,6 +64,14 @@ static Thetas ikine(Position3 &pos)
     return thetas;
 }
 
+float Gait_prg::move_point()
+{
+    float fun,m_velocity;
+    m_velocity = sqrt(pow(velocity.Vx,2)+pow(velocity.Vy,2));
+    fun = (body_pos.x * velocity.Vx + body_pos.y * velocity.Vy)/(m_velocity)*K_W;
+    return fun;
+}
+
 void Gait_prg::set_body_rotate_angle(Position3 &rotate_angle)
 {
     this->rotate_angle = rotate_angle;
@@ -98,20 +106,30 @@ void Gait_prg::set_height(float height)
 
 /*
  *@brief 设置机器人身体位置
- *@param pos 机器人的身体位置
+ *@param body_pos 机器人的身体位置
  */
-void Gait_prg::set_body_position(Position3 &pos)
+void Gait_prg::set_body_position(Position3 &body_pos)
 {
+    this->body_pos = body_pos;
     for (int i = 0; i < 6; i++)
     {
-        Pws[i] = Pws_default[i] - pos;
+        Pws[i] = Pws_default[i] - body_pos;
     }
+}
+
+/*
+ *@brief 设置机器人速度
+ *@param velocity 机器人速度
+ */
+void Gait_prg::set_velocity(Velocity &velocity)
+{
+    this->velocity = velocity;
 }
 
 /*
  * 计算圆心位置和步伐大小已及步伐执行时间
  */
-void Gait_prg::CEN_and_pace_cal(Velocity velocity)
+void Gait_prg::CEN_and_pace_cal()
 {
     // 数据预处理，避免出现0
     if (velocity.Vx == 0)
@@ -235,7 +253,7 @@ void Gait_prg::gait_proggraming()
         }
         point = hexapod_rotate(point, i);
         actions[i].thetas[LegControl_round] = ikine(point);
-    }
+    }  
 }
 
 uint32_t Gait_prg::get_pace_time()

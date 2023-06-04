@@ -45,7 +45,7 @@ extern "C"
 					LegControl_round--;
 			}
 			/*步态控制*/
-			gait_prg.CEN_and_pace_cal(hexapod.velocity);
+			gait_prg.CEN_and_pace_cal();
 			gait_prg.gait_proggraming();
 			/*开始移动*/
 			round_time = gait_prg.get_pace_time() / N_POINTS;
@@ -87,8 +87,12 @@ void Hexapod::Init(void)
 	velocity_fof[0].set_k_filter(VELOCITY_FOF_K);
 	velocity_fof[1].set_k_filter(VELOCITY_FOF_K);
 	velocity_fof[2].set_k_filter(VELOCITY_FOF_K);
-	body_pos_fof.set_k_filter(BODY_POS_FOF_K);
-	body_angle_fof.set_k_filter(BODY_ANGLE_FOF_K);
+	body_pos_fof[0].set_k_filter(BODY_POS_FOF_K);
+	body_pos_fof[1].set_k_filter(BODY_POS_FOF_K);
+	body_pos_fof[2].set_k_filter(BODY_POS_FOF_K);
+	body_angle_fof[0].set_k_filter(BODY_ANGLE_FOF_K);
+	body_angle_fof[1].set_k_filter(BODY_ANGLE_FOF_K);
+	body_angle_fof[2].set_k_filter(BODY_ANGLE_FOF_K);
 }
 
 // 计算机器人速度
@@ -102,13 +106,14 @@ void Hexapod::velocity_cal(const RC_remote_data_t &remote_data)
 	}
 	else
 	{
-		//velocity.Vx = 0.2 * remote_data.right_HRZC;
-		velocity.Vx = velocity_fof[0].cal(0.3 * remote_data.right_HRZC);
-		//velocity.Vy = 0.2 * remote_data.right_VETC;
-		velocity.Vy = velocity_fof[1].cal(0.3 * remote_data.right_VETC);
-		//velocity.omega = -0.3 * remote_data.left_HRZC;
-		velocity.omega = velocity_fof[2].cal(-0.3 * remote_data.left_HRZC);
+		velocity.Vx = velocity_fof[0].cal(0.3f * remote_data.right_HRZC);
+		velocity.Vy = velocity_fof[1].cal(0.3f * remote_data.right_VETC);
+		velocity.omega = velocity_fof[2].cal(-0.3f * remote_data.left_HRZC);
 	}
+	if(velocity.Vx>-0.0001f && velocity.Vx<0.0001f)velocity.Vx=0;
+	if(velocity.Vy>-0.0001f && velocity.Vy<0.0001f)velocity.Vy=0;
+	if(velocity.omega>-0.0001f && velocity.omega<0.0001f)velocity.omega=0;
+	gait_prg.set_velocity(velocity);
 }
 
 void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
@@ -120,12 +125,15 @@ void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
 		// body_pos.y += ROTATE_BODY_POS_SENSI * remote_data.right_VETC;
 		// body_pos.x += ROTATE_BODY_POS_SENSI * remote_data.right_HRZC;
 		body_pos.y = HEXAPOD_MAX_Y/660.0f * remote_data.right_VETC;
-		body_pos.x = HEXAPOD_MIN_X/660.0f * remote_data.right_HRZC;
-	}
-
+		body_pos.x = -HEXAPOD_MIN_X/660.0f * remote_data.right_HRZC;
+	}   
+	//限制数值
 	value_limit(body_pos.z, HEXAPOD_MIN_HEIGHT, HEXAPOD_MAX_HEIGHT);
 	value_limit(body_pos.y, HEXAPOD_MIN_Y, HEXAPOD_MAX_Y);
 	value_limit(body_pos.x, HEXAPOD_MIN_X, HEXAPOD_MAX_X);
+	//一阶低通滤波
+	body_pos.y = body_angle_fof[1].cal(body_pos.y);
+	body_pos.x = body_angle_fof[2].cal(body_pos.x);
 	gait_prg.set_body_position(body_pos);
 }
 
@@ -158,13 +166,14 @@ void Hexapod::body_angle_cal(const RC_remote_data_t &remote_data)
 	}
 	else
 	{
-		body_angle.x = -0.001 * remote_data.left_VETC;
-		body_angle.y = -0.001 * remote_data.left_HRZC;
-		body_angle.z = 0.001 * remote_data.right_HRZC;
-	}
+		body_angle.x = body_angle_fof[0].cal(-0.001f * remote_data.left_VETC);
+		body_angle.y = body_angle_fof[1].cal(-0.001f * remote_data.left_HRZC);
+		body_angle.z = body_angle_fof[2].cal(0.001f * remote_data.right_HRZC);
+	} 
 	value_limit(body_angle.x, HEXAPOD_MIN_X_ROTATE, HEXAPOD_MAX_X_ROTATE);
 	value_limit(body_angle.y, HEXAPOD_MIN_Y_ROTATE, HEXAPOD_MAX_Y_ROTATE);
 	value_limit(body_angle.z, HEXAPOD_MIN_Z_ROTATE, HEXAPOD_MAX_Z_ROTATE);
+
 
 	gait_prg.set_body_rotate_angle(body_angle);
 }
@@ -247,7 +256,7 @@ void Hexapod::move(uint32_t round_time)
 	for (int i = 0; i < 6;i++)
 	{
 		theta_temp = (gait_prg.actions[i].thetas[LegControl_round]) - leg_offset[i];
-		if(gait_prg.actions[i].thetas[LegControl_round].angle[0] <= 0)
+		if(theta_temp.angle[0] <= -2.0f/3.0f*PI )
 		{
 			theta_temp.angle[0] += 2 * PI;
 		}
