@@ -5,6 +5,7 @@
 #include "leg.h"
 #include "remote.h"
 #include "gait_prg.h"
+#include "arm.h"
 
 #define LEG_JOINT2_OFFSET PI / 2
 #define LEG_JOINT3_OFFSET -2 * PI / 9
@@ -35,7 +36,7 @@
 
 
 /*FOF一阶低通滤波参数*/
-#define VELOCITY_FOF_K 0.06f
+#define VELOCITY_FOF_K 0.3f
 #define BODY_POS_FOF_K 0.1f
 #define BODY_ANGLE_FOF_K 0.1f
 
@@ -57,19 +58,28 @@ typedef enum
     MPU_OFF,
 }MPU_SW_e;
 
-
+typedef enum
+{
+    ARM_ON,
+    ARM_OFF,
+}ARM_SW_e;
 
 class Hexapod
 {
 public:
     Leg legs[6];                 // 六条腿
+    Arm arm;    //3轴机械臂
     Velocity velocity;           // 机器人速度
     Hexapod_mode_e mode; // 机器人模式
     MPU_SW_e mpu_sw;    //是否由陀螺仪控制
+    ARM_SW_e arm_sw; //是否控制机械臂
     Position3 body_pos;     //机体位置
     Position3 body_angle;   //机体角度
     Position3 mpu_angle;
     Position3 mpu_angle_set;
+    Position3 arm_end_pos;
+    float arm_grip_pawl_angle;  //夹爪角度  
+    Position3 arm_end_last_pos; //上一个位置
     PID mpu_pid_x; //x轴pid
     PID mpu_pid_y; //y轴pid
     First_order_filter velocity_fof[3];
@@ -82,8 +92,8 @@ public:
     void body_angle_cal(const RC_remote_data_t &remote_data);
     void mode_select(const RC_remote_data_t &remote_data);
     void body_angle_and_pos_zero(const RC_remote_data_t &remote_data);
+    void arm_position_cal(const RC_remote_data_t &remote_data);
     void move(uint32_t round_time);
-
 };
 
 

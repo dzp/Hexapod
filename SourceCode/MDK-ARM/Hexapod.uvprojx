@@ -1612,6 +1612,11 @@
               <FileType>8</FileType>
               <FilePath>.\USER\APP\mpu6050.cpp</FilePath>
             </File>
+            <File>
+              <FileName>arm.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>.\USER\APP\arm.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

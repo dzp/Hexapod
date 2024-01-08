@@ -1,0 +1,147 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="simply_spider_controller.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Accelerometer.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Altimeter.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Brake.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Camera.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Compass.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Connector.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Device.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Display.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\DistanceSensor.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Emitter.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Field.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\GPS.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Gyro.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\InertialUnit.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Joystick.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Keyboard.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\LED.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Lidar.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\LightSensor.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Motion.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Motor.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Mouse.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Node.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Pen.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\PositionSensor.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Radar.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\RangeFinder.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Receiver.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Robot.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Skin.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Speaker.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\Supervisor.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\TouchSensor.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="$(WEBOTS_HOME)\src\controller\cpp\VacuumGripper.cpp">
+      <Filter>LIB</Filter>
+    </ClCompile>
+    <ClCompile Include="APP\gait_prg.cpp">
+      <Filter>Source\APP</Filter>
+    </ClCompile>
+    <ClCompile Include="APP\leg.cpp">
+      <Filter>Source\APP</Filter>
+    </ClCompile>
+    <ClCompile Include="APP\my_math.cpp">
+      <Filter>Source\APP</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{a9d2adc9-d802-446e-b49d-84a066d27984}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="LIB">
+      <UniqueIdentifier>{702e379e-8f24-4740-b9c8-5674af4e5f60}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\APP">
+      <UniqueIdentifier>{0ab75905-1b8c-42d3-b25f-b8339c63de2c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="APP\gait_prg.h">
+      <Filter>Source\APP</Filter>
+    </ClInclude>
+    <ClInclude Include="APP\leg.h">
+      <Filter>Source\APP</Filter>
+    </ClInclude>
+    <ClInclude Include="APP\my_math.h">
+      <Filter>Source\APP</Filter>
+    </ClInclude>
+    <ClInclude Include="simply_spider_controller.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

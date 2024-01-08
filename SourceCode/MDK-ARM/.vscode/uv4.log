@@ -1,6 +1,6 @@
 Load "app_test\\Hexapod.axf" 
 * JLink Info: Device "CORTEX-M7" selected.
-Set JLink Project File to "e:\Áù×ã»úÆ÷ÈË\Hexapod\SourceCode\MDK-ARM\JLinkSettings.ini"* JLink Info: Device "CORTEX-M7" selected.
+Set JLink Project File to "e:\Hexapod\Hexapod\SourceCode\MDK-ARM\JLinkSettings.ini"* JLink Info: Device "CORTEX-M7" selected.
 
 JLink info:
 ------------
@@ -42,7 +42,7 @@ ROMTableAddr = 0xE00FE000
 Target info:
 ------------
 Device: STM32H750VBTx
-VTarget = 3.005V
+VTarget = 3.016V
 State of Pins: TCK: 0, TDI: 0, TDO: 0, TMS: 1, TRES: 1, TRST: 0
 Hardware-Breakpoints: 8
 Software-Breakpoints: 8192
@@ -52,4 +52,4 @@ JTAG speed: 4000 kHz
 Erase Done.Programming Done.Verify OK.* JLink Info: Reset: Halt core after reset via DEMCR.VC_CORERESET.
 * JLink Info: Reset: Reset device via AIRCR.SYSRESETREQ.
 Application running ...
-Flash Load finished at 23:17:51
+Flash Load finished at 13:24:13

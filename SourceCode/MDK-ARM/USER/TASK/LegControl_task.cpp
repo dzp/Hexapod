@@ -70,12 +70,14 @@ void Hexapod::Init(void)
 	legs[3] = Leg(&huart4);
 	legs[4] = Leg(&huart5);
 	legs[5] = Leg(&huart6);
+	arm = Arm(&huart8);
 	MX_USART1_UART_Init();
 	MX_USART2_UART_Init();
 	MX_USART3_UART_Init();
 	MX_UART4_Init();
 	MX_UART5_Init();
 	MX_USART6_UART_Init();
+	MX_UART8_Init();
 	leg_offset[0] = Thetas(PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 	leg_offset[1] = Thetas(0.0f, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
 	leg_offset[2] = Thetas(-PI / 4, LEG_JOINT2_OFFSET, LEG_JOINT3_OFFSET);
@@ -93,12 +95,16 @@ void Hexapod::Init(void)
 	body_angle_fof[0].set_k_filter(BODY_ANGLE_FOF_K);
 	body_angle_fof[1].set_k_filter(BODY_ANGLE_FOF_K);
 	body_angle_fof[2].set_k_filter(BODY_ANGLE_FOF_K);
+
+	arm_end_pos.x = 0;
+	arm_end_pos.y = 200;
+	arm_end_pos.z = 0;
 }
 
 // 计算机器人速度
 void Hexapod::velocity_cal(const RC_remote_data_t &remote_data)
 {
-	if (this->mode != HEXAPOD_MOVE) // 若不是行走模式则速度为0
+	if (this->mode != HEXAPOD_MOVE || this->arm_sw==ARM_ON) // 若不是行走模式则速度为0
 	{
 		velocity.Vx = 0;
 		velocity.Vy = 0;
@@ -118,6 +124,8 @@ void Hexapod::velocity_cal(const RC_remote_data_t &remote_data)
 
 void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
 {
+	if(arm_sw==ARM_ON)return;
+
 	if (this->mode != HEXAPOD_BODY_ANGEL_CONTROL) // 除了姿态控制模式，其他情况下都能控制z轴高度
 		body_pos.z += ROTATE_BODY_POS_SENSI * remote_data.left_VETC;
 	if (this->mode == HEXAPOD_BODY_POS_CONTROL) // 若是身体位置控制模式则计算xy位置
@@ -139,6 +147,7 @@ void Hexapod::body_position_cal(const RC_remote_data_t &remote_data)
 
 void Hexapod::body_angle_cal(const RC_remote_data_t &remote_data)
 {
+	if(arm_sw==ARM_ON)return;
 	mpu_angle = mpu6050.get_angle();			  // 获取陀螺仪角度
 	if (this->mode != HEXAPOD_BODY_ANGEL_CONTROL) // 若不是姿态控制模式则直接返回
 		return;
@@ -178,6 +187,26 @@ void Hexapod::body_angle_cal(const RC_remote_data_t &remote_data)
 	gait_prg.set_body_rotate_angle(body_angle);
 }
 
+void Hexapod::arm_position_cal(const RC_remote_data_t &remote_data)
+{
+	this->arm_end_last_pos = this->arm_end_pos;
+	switch (this->arm_sw)
+	{
+	case ARM_ON:
+		this->arm_end_pos.x += remote_data.right_HRZC*ROTATE_BODY_POS_SENSI;
+		this->arm_end_pos.y += remote_data.right_VETC*ROTATE_BODY_POS_SENSI;
+		this->arm_end_pos.z += remote_data.left_VETC*ROTATE_BODY_POS_SENSI;
+		this->arm_grip_pawl_angle +=remote_data.left_HRZC*ROTATE_BODY_ANGLE_SENSI;
+		value_limit(this->arm_grip_pawl_angle,-1.3f,0);
+		this->arm.set_grip_theta(this->arm_grip_pawl_angle); 
+		break;
+	default:
+		break;
+	}
+	if(!arm.set_pos(arm_end_pos)) //无解则回退
+		this->arm_end_pos=this->arm_end_last_pos;
+}
+
 /*
  *@brief 检查拨轮数据，符合要求就归零
  *@param remote_data 遥控数据
@@ -207,13 +236,25 @@ void Hexapod::mode_select(const RC_remote_data_t &remote_data)
 	default:
 		break;
 	}
+	// switch (remote_data.S2)
+	// {
+	// case 0:
+	// 	mpu_sw = MPU_ON;
+	// 	break;
+	// case 1:
+	// 	mpu_sw = MPU_OFF;
+	// 	break;
+	// default:
+	// 	break;
+	// }
+	//暂时改成机械臂，拨杆不够用了
 	switch (remote_data.S2)
 	{
 	case 0:
-		mpu_sw = MPU_ON;
+		arm_sw = ARM_ON;
 		break;
 	case 1:
-		mpu_sw = MPU_OFF;
+		arm_sw = ARM_OFF;
 		break;
 	default:
 		break;
@@ -229,6 +270,7 @@ static void remote_deal(void)
 	hexapod.body_angle_cal(remote_data);
 	hexapod.body_position_cal(remote_data);
 	hexapod.body_angle_and_pos_zero(remote_data);
+	hexapod.arm_position_cal(remote_data);
 }
 
 
@@ -264,7 +306,8 @@ void Hexapod::move(uint32_t round_time)
 		legs[i].set_time(round_time);
 		legs[i].move_DMA();
 	}
-
+	arm.set_time(round_time);
+	arm.move_DMA();
 	// legs[0].move_DMA();
 	// legs[1].move_DMA();
 	// legs[2].move_DMA();

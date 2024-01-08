@@ -59,6 +59,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define LED_Pin GPIO_PIN_3
 #define LED_GPIO_Port GPIOE
+#define ARM_TXE_Pin GPIO_PIN_1
+#define ARM_TXE_GPIO_Port GPIOA
+#define ARM_RXE_Pin GPIO_PIN_0
+#define ARM_RXE_GPIO_Port GPIOA
 #define LEG3_TXE_Pin GPIO_PIN_14
 #define LEG3_TXE_GPIO_Port GPIOE
 #define LEG3_RXE_Pin GPIO_PIN_15

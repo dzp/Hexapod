@@ -119,6 +119,9 @@ void Leg::RX_Enable()
 	case (uint32_t)USART6:
 		__LEG6_RXEN();
 		break;
+	case (uint32_t)UART8:
+		__ARM_RXEN();
+		break;
 	default:
 		break;
 	}
@@ -147,6 +150,9 @@ void Leg::TX_Enable()
 	case (uint32_t)USART6:
 		__LEG6_TXEN();
 		break;
+	case (uint32_t)UART8:
+		__ARM_TXEN();
+		break;
 	default:
 		break;
 	}
@@ -174,7 +180,12 @@ void Leg::TX_Unable()
 	case (uint32_t)USART6:
 		__LEG6_TXUEN();
 		break;
+	case (uint32_t)UART8:
+		__ARM_TXUEN();
+		break;
 	default:
 		break;
 	}
 }
+
+

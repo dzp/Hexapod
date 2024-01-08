@@ -30,4 +30,6 @@ public:
 	void read_angle(uint32_t id);	// ¶ÁÈ¡¶æ»ú½Ç¶È
 };
 
+
+
 #endif
